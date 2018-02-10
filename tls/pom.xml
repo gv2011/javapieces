@@ -26,39 +26,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.github.gv2011</groupId>
-    <artifactId>parent-gv</artifactId>
-    <version>0.3.0</version>
+    <groupId>com.github.gv2011.javapieces</groupId>
+    <artifactId>javapieces-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>com.github.gv2011.javapieces</groupId>
-  <artifactId>javapieces-parent</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <artifactId>javapieces-tls</artifactId>
 
-  <description>Experiments</description>
-  <url>https://github.com/gv2011/javapieces</url>
-
-  <scm>
-    <connection>scm:git:git@github.com:gv2011/javapieces.git</connection>
-    <developerConnection>scm:git:git@github.com:gv2011/javapieces.git</developerConnection>
-    <url>https://github.com/gv2011/javapieces</url>
-    <tag>HEAD</tag>
-  </scm>
-
-  <modules>
-    <module>tls</module>
-  </modules>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <configuration>
-          <inceptionYear>2018</inceptionYear>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>
