@@ -51,13 +51,14 @@ public abstract class SSLSocketFactory extends SocketFactory
     static final boolean DEBUG;
 
     static {
-        String s = GetPropertyAction.privilegedGetProperty("javax.net.debug", "")
-                .toLowerCase(Locale.ENGLISH);
+        final String s = "";
+        // GetPropertyAction.privilegedGetProperty("javax.net.debug", "")
+        //   .toLowerCase(Locale.ENGLISH);
 
         DEBUG = s.contains("all") || s.contains("ssl");
     }
 
-    private static void log(String msg) {
+    private static void log(final String msg) {
         if (DEBUG) {
             System.out.println(msg);
         }
@@ -92,26 +93,27 @@ public abstract class SSLSocketFactory extends SocketFactory
 
         if (propertyChecked == false) {
             propertyChecked = true;
-            String clsName = getSecurityProperty("ssl.SocketFactory.provider");
+            final String clsName = getSecurityProperty("ssl.SocketFactory.provider");
             if (clsName != null) {
                 log("setting up default SSLSocketFactory");
                 try {
                     Class<?> cls = null;
                     try {
                         cls = Class.forName(clsName);
-                    } catch (ClassNotFoundException e) {
-                        ClassLoader cl = ClassLoader.getSystemClassLoader();
+                    } catch (final ClassNotFoundException e) {
+                        final ClassLoader cl = ClassLoader.getSystemClassLoader();
                         if (cl != null) {
                             cls = cl.loadClass(clsName);
                         }
                     }
                     log("class " + clsName + " is loaded");
                     @SuppressWarnings("deprecation")
+                    final
                     SSLSocketFactory fac = (SSLSocketFactory)cls.newInstance();
                     log("instantiated an instance of class " + clsName);
                     theFactory = fac;
                     return fac;
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     log("SSLSocketFactory instantiation failed: " + e.toString());
                     theFactory = new DefaultSSLSocketFactory(e);
                     return theFactory;
@@ -121,24 +123,21 @@ public abstract class SSLSocketFactory extends SocketFactory
 
         try {
             return SSLContext.getDefault().getSocketFactory();
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             return new DefaultSSLSocketFactory(e);
         }
     }
 
     static String getSecurityProperty(final String name) {
-        return AccessController.doPrivileged(new PrivilegedAction<>() {
-            @Override
-            public String run() {
-                String s = java.security.Security.getProperty(name);
-                if (s != null) {
-                    s = s.trim();
-                    if (s.length() == 0) {
-                        s = null;
-                    }
+        return AccessController.doPrivileged((PrivilegedAction<String>) () -> {
+            String s = java.security.Security.getProperty(name);
+            if (s != null) {
+                s = s.trim();
+                if (s.length() == 0) {
+                    s = null;
                 }
-                return s;
             }
+            return s;
         });
     }
 
@@ -242,8 +241,8 @@ public abstract class SSLSocketFactory extends SocketFactory
      *
      * @since 1.8
      */
-    public Socket createSocket(Socket s, InputStream consumed,
-            boolean autoClose) throws IOException {
+    public Socket createSocket(final Socket s, final InputStream consumed,
+            final boolean autoClose) throws IOException {
         throw new UnsupportedOperationException();
     }
 }
@@ -252,9 +251,9 @@ public abstract class SSLSocketFactory extends SocketFactory
 // file private
 class DefaultSSLSocketFactory extends SSLSocketFactory
 {
-    private Exception reason;
+    private final Exception reason;
 
-    DefaultSSLSocketFactory(Exception reason) {
+    DefaultSSLSocketFactory(final Exception reason) {
         this.reason = reason;
     }
 
@@ -271,38 +270,38 @@ class DefaultSSLSocketFactory extends SSLSocketFactory
     }
 
     @Override
-    public Socket createSocket(String host, int port)
+    public Socket createSocket(final String host, final int port)
     throws IOException
     {
         return throwException();
     }
 
     @Override
-    public Socket createSocket(Socket s, String host,
-                                int port, boolean autoClose)
+    public Socket createSocket(final Socket s, final String host,
+                                final int port, final boolean autoClose)
     throws IOException
     {
         return throwException();
     }
 
     @Override
-    public Socket createSocket(InetAddress address, int port)
+    public Socket createSocket(final InetAddress address, final int port)
     throws IOException
     {
         return throwException();
     }
 
     @Override
-    public Socket createSocket(String host, int port,
-        InetAddress clientAddress, int clientPort)
+    public Socket createSocket(final String host, final int port,
+        final InetAddress clientAddress, final int clientPort)
     throws IOException
     {
         return throwException();
     }
 
     @Override
-    public Socket createSocket(InetAddress address, int port,
-        InetAddress clientAddress, int clientPort)
+    public Socket createSocket(final InetAddress address, final int port,
+        final InetAddress clientAddress, final int clientPort)
     throws IOException
     {
         return throwException();

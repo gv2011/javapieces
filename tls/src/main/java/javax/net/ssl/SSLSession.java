@@ -282,7 +282,7 @@ public interface SSLSession {
      *               array of {@code java.security.cert.Certificate} should
      *               be used instead.
      */
-    @Deprecated(since="9")
+    @Deprecated//(since="9")
     public javax.security.cert.X509Certificate [] getPeerCertificateChain()
             throws SSLPeerUnverifiedException;
 

@@ -25,7 +25,6 @@
 
 package javax.net.ssl;
 
-import java.security.Security;
 import java.security.*;
 import java.util.Objects;
 
@@ -42,13 +41,13 @@ import sun.security.jca.GetInstance;
  */
 public class KeyManagerFactory {
     // The provider
-    private Provider provider;
+    private final Provider provider;
 
     // The provider implementation (delegate)
-    private KeyManagerFactorySpi factorySpi;
+    private final KeyManagerFactorySpi factorySpi;
 
     // The name of the key management algorithm.
-    private String algorithm;
+    private final String algorithm;
 
     /**
      * Obtains the default KeyManagerFactory algorithm name.
@@ -64,13 +63,8 @@ public class KeyManagerFactory {
      */
     public static final String getDefaultAlgorithm() {
         String type;
-        type = AccessController.doPrivileged(new PrivilegedAction<>() {
-            @Override
-            public String run() {
-                return Security.getProperty(
-                    "ssl.KeyManagerFactory.algorithm");
-            }
-        });
+        type = AccessController.doPrivileged((PrivilegedAction<String>) () -> Security.getProperty(
+            "ssl.KeyManagerFactory.algorithm"));
         if (type == null) {
             type = "SunX509";
         }
@@ -84,8 +78,8 @@ public class KeyManagerFactory {
      * @param provider the provider
      * @param algorithm the algorithm
      */
-    protected KeyManagerFactory(KeyManagerFactorySpi factorySpi,
-                                Provider provider, String algorithm) {
+    protected KeyManagerFactory(final KeyManagerFactorySpi factorySpi,
+                                final Provider provider, final String algorithm) {
         this.factorySpi = factorySpi;
         this.provider = provider;
         this.algorithm = algorithm;
@@ -101,7 +95,7 @@ public class KeyManagerFactory {
      * @return the algorithm name of this <code>KeyManagerFactory</code> object.
      */
     public final String getAlgorithm() {
-        return this.algorithm;
+        return algorithm;
     }
 
     /**
@@ -141,10 +135,10 @@ public class KeyManagerFactory {
      *
      * @see java.security.Provider
      */
-    public static final KeyManagerFactory getInstance(String algorithm)
+    public static final KeyManagerFactory getInstance(final String algorithm)
             throws NoSuchAlgorithmException {
         Objects.requireNonNull(algorithm, "null algorithm name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("KeyManagerFactory", KeyManagerFactorySpi.class,
                 algorithm);
         return new KeyManagerFactory((KeyManagerFactorySpi)instance.impl,
@@ -187,11 +181,11 @@ public class KeyManagerFactory {
      *
      * @see java.security.Provider
      */
-    public static final KeyManagerFactory getInstance(String algorithm,
-            String provider) throws NoSuchAlgorithmException,
+    public static final KeyManagerFactory getInstance(final String algorithm,
+            final String provider) throws NoSuchAlgorithmException,
             NoSuchProviderException {
         Objects.requireNonNull(algorithm, "null algorithm name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("KeyManagerFactory", KeyManagerFactorySpi.class,
                 algorithm, provider);
         return new KeyManagerFactory((KeyManagerFactorySpi)instance.impl,
@@ -227,10 +221,10 @@ public class KeyManagerFactory {
      *
      * @see java.security.Provider
      */
-    public static final KeyManagerFactory getInstance(String algorithm,
-            Provider provider) throws NoSuchAlgorithmException {
+    public static final KeyManagerFactory getInstance(final String algorithm,
+            final Provider provider) throws NoSuchAlgorithmException {
         Objects.requireNonNull(algorithm, "null algorithm name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("KeyManagerFactory", KeyManagerFactorySpi.class,
                 algorithm, provider);
         return new KeyManagerFactory((KeyManagerFactorySpi)instance.impl,
@@ -243,7 +237,7 @@ public class KeyManagerFactory {
      * @return the provider of this <code>KeyManagerFactory</code> object
      */
     public final Provider getProvider() {
-        return this.provider;
+        return provider;
     }
 
 
@@ -265,7 +259,7 @@ public class KeyManagerFactory {
      * @throws UnrecoverableKeyException if the key cannot be recovered
      *          (e.g. the given password is wrong).
      */
-    public final void init(KeyStore ks, char[] password) throws
+    public final void init(final KeyStore ks, final char[] password) throws
             KeyStoreException, NoSuchAlgorithmException,
             UnrecoverableKeyException {
         factorySpi.engineInit(ks, password);
@@ -288,7 +282,7 @@ public class KeyManagerFactory {
      *          specification
      * @throws InvalidAlgorithmParameterException if an error is encountered
      */
-    public final void init(ManagerFactoryParameters spec) throws
+    public final void init(final ManagerFactoryParameters spec) throws
             InvalidAlgorithmParameterException {
         factorySpi.engineInit(spec);
     }

@@ -25,7 +25,6 @@
 
 package javax.net.ssl;
 
-import java.security.Security;
 import java.security.*;
 import java.util.Objects;
 
@@ -54,13 +53,13 @@ import sun.security.jca.GetInstance;
  */
 public class TrustManagerFactory {
     // The provider
-    private Provider provider;
+    private final Provider provider;
 
     // The provider implementation (delegate)
-    private TrustManagerFactorySpi factorySpi;
+    private final TrustManagerFactorySpi factorySpi;
 
     // The name of the trust management algorithm.
-    private String algorithm;
+    private final String algorithm;
 
     /**
      * Obtains the default TrustManagerFactory algorithm name.
@@ -76,13 +75,8 @@ public class TrustManagerFactory {
      */
     public static final String getDefaultAlgorithm() {
         String type;
-        type = AccessController.doPrivileged(new PrivilegedAction<>() {
-            @Override
-            public String run() {
-                return Security.getProperty(
-                    "ssl.TrustManagerFactory.algorithm");
-            }
-        });
+        type = AccessController.doPrivileged((PrivilegedAction<String>) () -> Security.getProperty(
+            "ssl.TrustManagerFactory.algorithm"));
         if (type == null) {
             type = "SunX509";
         }
@@ -96,8 +90,8 @@ public class TrustManagerFactory {
      * @param provider the provider
      * @param algorithm the algorithm
      */
-    protected TrustManagerFactory(TrustManagerFactorySpi factorySpi,
-            Provider provider, String algorithm) {
+    protected TrustManagerFactory(final TrustManagerFactorySpi factorySpi,
+            final Provider provider, final String algorithm) {
         this.factorySpi = factorySpi;
         this.provider = provider;
         this.algorithm = algorithm;
@@ -115,7 +109,7 @@ public class TrustManagerFactory {
      *          object
      */
     public final String getAlgorithm() {
-        return this.algorithm;
+        return algorithm;
     }
 
     /**
@@ -155,10 +149,10 @@ public class TrustManagerFactory {
      *
      * @see java.security.Provider
      */
-    public static final TrustManagerFactory getInstance(String algorithm)
+    public static final TrustManagerFactory getInstance(final String algorithm)
             throws NoSuchAlgorithmException {
         Objects.requireNonNull(algorithm, "null algorithm name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("TrustManagerFactory", TrustManagerFactorySpi.class,
                 algorithm);
         return new TrustManagerFactory((TrustManagerFactorySpi)instance.impl,
@@ -201,11 +195,11 @@ public class TrustManagerFactory {
      *
      * @see java.security.Provider
      */
-    public static final TrustManagerFactory getInstance(String algorithm,
-            String provider) throws NoSuchAlgorithmException,
+    public static final TrustManagerFactory getInstance(final String algorithm,
+            final String provider) throws NoSuchAlgorithmException,
             NoSuchProviderException {
         Objects.requireNonNull(algorithm, "null algorithm name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("TrustManagerFactory", TrustManagerFactorySpi.class,
                 algorithm, provider);
         return new TrustManagerFactory((TrustManagerFactorySpi)instance.impl,
@@ -241,10 +235,10 @@ public class TrustManagerFactory {
      *
      * @see java.security.Provider
      */
-    public static final TrustManagerFactory getInstance(String algorithm,
-            Provider provider) throws NoSuchAlgorithmException {
+    public static final TrustManagerFactory getInstance(final String algorithm,
+            final Provider provider) throws NoSuchAlgorithmException {
         Objects.requireNonNull(algorithm, "null algorithm name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("TrustManagerFactory", TrustManagerFactorySpi.class,
                 algorithm, provider);
         return new TrustManagerFactory((TrustManagerFactorySpi)instance.impl,
@@ -257,7 +251,7 @@ public class TrustManagerFactory {
      * @return the provider of this <code>TrustManagerFactory</code> object
      */
     public final Provider getProvider() {
-        return this.provider;
+        return provider;
     }
 
 
@@ -274,7 +268,7 @@ public class TrustManagerFactory {
      * @param ks the key store, or null
      * @throws KeyStoreException if this operation fails
      */
-    public final void init(KeyStore ks) throws KeyStoreException {
+    public final void init(final KeyStore ks) throws KeyStoreException {
         factorySpi.engineInit(ks);
     }
 
@@ -296,7 +290,7 @@ public class TrustManagerFactory {
      * @throws InvalidAlgorithmParameterException if an error is
      *          encountered
      */
-    public final void init(ManagerFactoryParameters spec) throws
+    public final void init(final ManagerFactoryParameters spec) throws
             InvalidAlgorithmParameterException {
         factorySpi.engineInit(spec);
     }

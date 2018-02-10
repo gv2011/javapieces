@@ -59,7 +59,7 @@ public class HandshakeCompletedEvent extends EventObject
      * @param sock the SSLSocket acting as the source of the event
      * @param s the SSLSession this event is associated with
      */
-    public HandshakeCompletedEvent(SSLSocket sock, SSLSession s)
+    public HandshakeCompletedEvent(final SSLSocket sock, final SSLSession s)
     {
         super(sock);
         session = s;
@@ -162,7 +162,7 @@ public class HandshakeCompletedEvent extends EventObject
      *               array of {@code java.security.cert.Certificate} should
      *               be used instead.
      */
-    @Deprecated(since="9")
+    @Deprecated //(since="9")
     public javax.security.cert.X509Certificate [] getPeerCertificateChain()
             throws SSLPeerUnverifiedException
     {
@@ -191,10 +191,10 @@ public class HandshakeCompletedEvent extends EventObject
         Principal principal;
         try {
             principal = session.getPeerPrincipal();
-        } catch (AbstractMethodError e) {
+        } catch (final AbstractMethodError e) {
             // if the provider does not support it, fallback to peer certs.
             // return the X500Principal of the end-entity cert.
-            Certificate[] certs = getPeerCertificates();
+            final Certificate[] certs = getPeerCertificates();
             principal = ((X509Certificate)certs[0]).getSubjectX500Principal();
         }
         return principal;
@@ -218,11 +218,11 @@ public class HandshakeCompletedEvent extends EventObject
         Principal principal;
         try {
             principal = session.getLocalPrincipal();
-        } catch (AbstractMethodError e) {
+        } catch (final AbstractMethodError e) {
             principal = null;
             // if the provider does not support it, fallback to local certs.
             // return the X500Principal of the end-entity cert.
-            Certificate[] certs = getLocalCertificates();
+            final Certificate[] certs = getLocalCertificates();
             if (certs != null) {
                 principal =
                         ((X509Certificate)certs[0]).getSubjectX500Principal();
