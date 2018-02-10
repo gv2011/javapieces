@@ -27,12 +27,6 @@ package com.github.gv2011.javapieces.tls;
 
 import java.util.List;
 
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509ExtendedTrustManager;
-import javax.net.ssl.X509KeyManager;
 
 /**
  * Extends the {@code SSLSession} interface to support additional

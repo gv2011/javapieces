@@ -25,7 +25,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import java.security.*;
+import java.security.BasicPermission;
 
 /**
  * This class is for various network permissions.
@@ -118,7 +118,7 @@ public final class SSLPermission extends BasicPermission {
      * @throws IllegalArgumentException if <code>name</code> is empty.
      */
 
-    public SSLPermission(String name)
+    public SSLPermission(final String name)
     {
         super(name);
     }
@@ -135,7 +135,7 @@ public final class SSLPermission extends BasicPermission {
      * @throws IllegalArgumentException if <code>name</code> is empty.
      */
 
-    public SSLPermission(String name, String actions)
+    public SSLPermission(final String name, final String actions)
     {
         super(name, actions);
     }

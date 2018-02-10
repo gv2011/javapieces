@@ -27,10 +27,6 @@ package com.github.gv2011.javapieces.tls;
 
 import java.util.EventObject;
 
-import javax.net.ssl.HandshakeCompletedListener;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
 
 import java.security.cert.Certificate;
 import java.security.Principal;

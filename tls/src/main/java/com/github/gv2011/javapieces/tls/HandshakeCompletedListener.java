@@ -27,7 +27,6 @@ package com.github.gv2011.javapieces.tls;
 
 import java.util.EventListener;
 
-import javax.net.ssl.HandshakeCompletedEvent;
 
 /**
  * This interface is implemented by any class which wants to receive

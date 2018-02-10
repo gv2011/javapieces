@@ -26,7 +26,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.SSLException;
+
 
 /**
  * Indicates that the client and server could not negotiate the
@@ -46,7 +46,7 @@ class SSLHandshakeException extends SSLException
      *
      * @param reason describes the problem.
      */
-    public SSLHandshakeException(String reason)
+    public SSLHandshakeException(final String reason)
     {
         super(reason);
     }

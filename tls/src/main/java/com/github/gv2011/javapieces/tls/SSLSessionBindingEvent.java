@@ -28,8 +28,7 @@ package com.github.gv2011.javapieces.tls;
 
 import java.util.EventObject;
 
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSessionBindingListener;
+
 
 
 /**
@@ -57,7 +56,7 @@ extends EventObject
     /**
      * @serial The name to which the object is being bound or unbound
      */
-    private String name;
+    private final String name;
 
     /**
      * Constructs a new SSLSessionBindingEvent.
@@ -66,7 +65,7 @@ extends EventObject
      * @param name the name to which the object is being bound or unbound
      * @exception  IllegalArgumentException  if <code>session</code> is null.
      */
-    public SSLSessionBindingEvent(SSLSession session, String name)
+    public SSLSessionBindingEvent(final SSLSession session, final String name)
     {
         super(session);
         this.name = name;

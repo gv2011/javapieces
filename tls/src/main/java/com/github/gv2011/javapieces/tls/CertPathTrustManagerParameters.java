@@ -27,10 +27,6 @@ package com.github.gv2011.javapieces.tls;
 
 import java.security.cert.CertPathParameters;
 
-import javax.net.ssl.ManagerFactoryParameters;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 
 /**
  * A wrapper for CertPathParameters. This class is used to pass validation
@@ -60,7 +56,7 @@ public class CertPathTrustManagerParameters implements ManagerFactoryParameters 
      *
      * @throws NullPointerException if parameters is null
      */
-    public CertPathTrustManagerParameters(CertPathParameters parameters) {
+    public CertPathTrustManagerParameters(final CertPathParameters parameters) {
         this.parameters = (CertPathParameters)parameters.clone();
     }
 

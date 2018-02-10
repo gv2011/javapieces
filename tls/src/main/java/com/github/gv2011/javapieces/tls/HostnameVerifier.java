@@ -25,7 +25,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.SSLSession;
+
 
 /**
  * This class is the base interface for hostname verification.

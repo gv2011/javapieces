@@ -26,7 +26,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.SSLException;
+
 
 /**
  * Reports a bad SSL key.  Normally, this indicates misconfiguration
@@ -46,7 +46,7 @@ class SSLKeyException extends SSLException
      *
      * @param reason describes the problem.
      */
-    public SSLKeyException(String reason)
+    public SSLKeyException(final String reason)
     {
         super(reason);
     }

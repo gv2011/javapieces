@@ -28,10 +28,7 @@ package com.github.gv2011.javapieces.tls;
 import java.security.*;
 import java.util.Objects;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.KeyManagerFactorySpi;
-import javax.net.ssl.ManagerFactoryParameters;
+
 
 import sun.security.jca.GetInstance;
 

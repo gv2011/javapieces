@@ -25,11 +25,11 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import java.security.*;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 
-import javax.net.ssl.ManagerFactoryParameters;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
+
 
 /**
  * This class defines the <i>Service Provider Interface</i> (<b>SPI</b>)

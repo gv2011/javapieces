@@ -28,15 +28,6 @@ package com.github.gv2011.javapieces.tls;
 import java.security.AlgorithmConstraints;
 import java.util.Map;
 
-import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIMatcher;
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.StandardConstants;
-import javax.net.ssl.X509ExtendedTrustManager;
 
 import java.util.List;
 import java.util.HashMap;
@@ -128,7 +119,7 @@ public class SSLParameters {
      *
      * @param cipherSuites the array of ciphersuites (or null)
      */
-    public SSLParameters(String[] cipherSuites) {
+    public SSLParameters(final String[] cipherSuites) {
         setCipherSuites(cipherSuites);
     }
 
@@ -149,12 +140,12 @@ public class SSLParameters {
      * @param cipherSuites the array of ciphersuites (or null)
      * @param protocols the array of protocols (or null)
      */
-    public SSLParameters(String[] cipherSuites, String[] protocols) {
+    public SSLParameters(final String[] cipherSuites, final String[] protocols) {
         setCipherSuites(cipherSuites);
         setProtocols(protocols);
     }
 
-    private static String[] clone(String[] s) {
+    private static String[] clone(final String[] s) {
         return (s == null) ? null : s.clone();
     }
 
@@ -187,7 +178,7 @@ public class SSLParameters {
      * may support cipher suite names not found in this list or might not
      * use the recommended name for a certain cipher suite.
      */
-    public void setCipherSuites(String[] cipherSuites) {
+    public void setCipherSuites(final String[] cipherSuites) {
         this.cipherSuites = clone(cipherSuites);
     }
 
@@ -207,7 +198,7 @@ public class SSLParameters {
      *
      * @param protocols the array of protocols (or null)
      */
-    public void setProtocols(String[] protocols) {
+    public void setProtocols(final String[] protocols) {
         this.protocols = clone(protocols);
     }
 
@@ -226,9 +217,9 @@ public class SSLParameters {
      *
      * @param wantClientAuth whether client authentication should be requested
      */
-    public void setWantClientAuth(boolean wantClientAuth) {
+    public void setWantClientAuth(final boolean wantClientAuth) {
         this.wantClientAuth = wantClientAuth;
-        this.needClientAuth = false;
+        needClientAuth = false;
     }
 
     /**
@@ -246,8 +237,8 @@ public class SSLParameters {
      *
      * @param needClientAuth whether client authentication should be required
      */
-    public void setNeedClientAuth(boolean needClientAuth) {
-        this.wantClientAuth = false;
+    public void setNeedClientAuth(final boolean needClientAuth) {
+        wantClientAuth = false;
         this.needClientAuth = needClientAuth;
     }
 
@@ -277,9 +268,9 @@ public class SSLParameters {
      *
      * @since 1.7
      */
-    public void setAlgorithmConstraints(AlgorithmConstraints constraints) {
+    public void setAlgorithmConstraints(final AlgorithmConstraints constraints) {
         // the constraints object is immutable
-        this.algorithmConstraints = constraints;
+        algorithmConstraints = constraints;
     }
 
     /**
@@ -315,8 +306,8 @@ public class SSLParameters {
      *
      * @since 1.7
      */
-    public void setEndpointIdentificationAlgorithm(String algorithm) {
-        this.identificationAlgorithm = algorithm;
+    public void setEndpointIdentificationAlgorithm(final String algorithm) {
+        identificationAlgorithm = algorithm;
     }
 
     /**
@@ -342,11 +333,11 @@ public class SSLParameters {
      *
      * @since 1.8
      */
-    public final void setServerNames(List<SNIServerName> serverNames) {
+    public final void setServerNames(final List<SNIServerName> serverNames) {
         if (serverNames != null) {
             if (!serverNames.isEmpty()) {
                 sniNames = new LinkedHashMap<>(serverNames.size());
-                for (SNIServerName serverName : serverNames) {
+                for (final SNIServerName serverName : serverNames) {
                     if (sniNames.put(serverName.getType(),
                                                 serverName) != null) {
                         throw new IllegalArgumentException(
@@ -436,11 +427,11 @@ public class SSLParameters {
      *
      * @since 1.8
      */
-    public final void setSNIMatchers(Collection<SNIMatcher> matchers) {
+    public final void setSNIMatchers(final Collection<SNIMatcher> matchers) {
         if (matchers != null) {
             if (!matchers.isEmpty()) {
                 sniMatchers = new HashMap<>(matchers.size());
-                for (SNIMatcher matcher : matchers) {
+                for (final SNIMatcher matcher : matchers) {
                     if (sniMatchers.put(matcher.getType(),
                                                 matcher) != null) {
                         throw new IllegalArgumentException(
@@ -498,8 +489,8 @@ public class SSLParameters {
      *
      * @since 1.8
      */
-    public final void setUseCipherSuitesOrder(boolean honorOrder) {
-        this.preferLocalCipherSuites = honorOrder;
+    public final void setUseCipherSuitesOrder(final boolean honorOrder) {
+        preferLocalCipherSuites = honorOrder;
     }
 
     /**
@@ -530,7 +521,7 @@ public class SSLParameters {
      *
      * @since 9
      */
-    public void setEnableRetransmissions(boolean enableRetransmissions) {
+    public void setEnableRetransmissions(final boolean enableRetransmissions) {
         this.enableRetransmissions = enableRetransmissions;
     }
 
@@ -573,7 +564,7 @@ public class SSLParameters {
      *
      * @since 9
      */
-    public void setMaximumPacketSize(int maximumPacketSize) {
+    public void setMaximumPacketSize(final int maximumPacketSize) {
         if (maximumPacketSize < 0) {
             throw new IllegalArgumentException(
                 "The maximum packet size cannot be negative");
@@ -671,14 +662,14 @@ public class SSLParameters {
      * @see #getApplicationProtocols
      * @since 9
      */
-    public void setApplicationProtocols(String[] protocols) {
+    public void setApplicationProtocols(final String[] protocols) {
         if (protocols == null) {
             throw new IllegalArgumentException("protocols was null");
         }
 
-        String[] tempProtocols = protocols.clone();
+        final String[] tempProtocols = protocols.clone();
 
-        for (String p : tempProtocols) {
+        for (final String p : tempProtocols) {
             if (p == null || p.equals("")) {
                 throw new IllegalArgumentException(
                     "An element of protocols was null/empty");

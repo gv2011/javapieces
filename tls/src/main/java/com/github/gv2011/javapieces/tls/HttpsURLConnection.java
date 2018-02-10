@@ -30,12 +30,7 @@ import java.net.HttpURLConnection;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 
-import javax.net.ssl.DefaultHostnameVerifier;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLPermission;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
+
 
 /**
  * <code>HttpsURLConnection</code> extends <code>HttpURLConnection</code>
@@ -68,7 +63,7 @@ class HttpsURLConnection extends HttpURLConnection
      *
      * @param url the URL
      */
-    protected HttpsURLConnection(URL url) {
+    protected HttpsURLConnection(final URL url) {
         super(url);
     }
 
@@ -152,7 +147,7 @@ class HttpsURLConnection extends HttpURLConnection
     public Principal getPeerPrincipal()
             throws SSLPeerUnverifiedException {
 
-        java.security.cert.Certificate[] certs = getServerCertificates();
+        final java.security.cert.Certificate[] certs = getServerCertificates();
         return ((X509Certificate)certs[0]).getSubjectX500Principal();
     }
 
@@ -179,7 +174,7 @@ class HttpsURLConnection extends HttpURLConnection
      */
     public Principal getLocalPrincipal() {
 
-        java.security.cert.Certificate[] certs = getLocalCertificates();
+        final java.security.cert.Certificate[] certs = getLocalCertificates();
         if (certs != null) {
             return ((X509Certificate)certs[0]).getSubjectX500Principal();
         } else {
@@ -206,7 +201,7 @@ class HttpsURLConnection extends HttpURLConnection
     private static class DefaultHostnameVerifier
             implements HostnameVerifier {
         @Override
-        public boolean verify(String hostname, SSLSession session) {
+        public boolean verify(final String hostname, final SSLSession session) {
             return false;
         }
     }
@@ -232,13 +227,13 @@ class HttpsURLConnection extends HttpURLConnection
      *         <code>SSLPermission("setHostnameVerifier")</code>
      * @see #getDefaultHostnameVerifier()
      */
-    public static void setDefaultHostnameVerifier(HostnameVerifier v) {
+    public static void setDefaultHostnameVerifier(final HostnameVerifier v) {
         if (v == null) {
             throw new IllegalArgumentException(
                 "no default HostnameVerifier specified");
         }
 
-        SecurityManager sm = System.getSecurityManager();
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new SSLPermission("setHostnameVerifier"));
         }
@@ -270,7 +265,7 @@ class HttpsURLConnection extends HttpURLConnection
      * @see #getHostnameVerifier()
      * @see #setDefaultHostnameVerifier(HostnameVerifier)
      */
-    public void setHostnameVerifier(HostnameVerifier v) {
+    public void setHostnameVerifier(final HostnameVerifier v) {
         if (v == null) {
             throw new IllegalArgumentException(
                 "no HostnameVerifier specified");
@@ -313,13 +308,13 @@ class HttpsURLConnection extends HttpURLConnection
      *         a socket factory to be specified.
      * @see #getDefaultSSLSocketFactory()
      */
-    public static void setDefaultSSLSocketFactory(SSLSocketFactory sf) {
+    public static void setDefaultSSLSocketFactory(final SSLSocketFactory sf) {
         if (sf == null) {
             throw new IllegalArgumentException(
                 "no default SSLSocketFactory specified");
         }
 
-        SecurityManager sm = System.getSecurityManager();
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkSetFactory();
         }
@@ -362,13 +357,13 @@ class HttpsURLConnection extends HttpURLConnection
      *         a socket factory to be specified.
      * @see #getSSLSocketFactory()
      */
-    public void setSSLSocketFactory(SSLSocketFactory sf) {
+    public void setSSLSocketFactory(final SSLSocketFactory sf) {
         if (sf == null) {
             throw new IllegalArgumentException(
                 "no SSLSocketFactory specified");
         }
 
-        SecurityManager sm = System.getSecurityManager();
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkSetFactory();
         }

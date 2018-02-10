@@ -28,8 +28,7 @@ package com.github.gv2011.javapieces.tls;
 
 import java.util.EventListener;
 
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSessionBindingEvent;
+
 
 /**
  * This interface is implemented by objects which want to know when

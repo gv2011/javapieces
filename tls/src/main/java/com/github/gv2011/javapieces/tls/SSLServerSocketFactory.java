@@ -30,15 +30,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.SocketException;
-import javax.net.ServerSocketFactory;
-import javax.net.ssl.DefaultSSLServerSocketFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
+import java.security.NoSuchAlgorithmException;
 
-import java.security.*;
+import javax.net.ServerSocketFactory;
 
 /**
  * <code>SSLServerSocketFactory</code>s create
@@ -55,7 +49,7 @@ public abstract class SSLServerSocketFactory extends ServerSocketFactory
 
     private static boolean propertyChecked;
 
-    private static void log(String msg) {
+    private static void log(final String msg) {
         if (SSLSocketFactory.DEBUG) {
             System.out.println(msg);
         }
@@ -89,7 +83,7 @@ public abstract class SSLServerSocketFactory extends ServerSocketFactory
 
         if (propertyChecked == false) {
             propertyChecked = true;
-            String clsName = SSLSocketFactory.getSecurityProperty
+            final String clsName = SSLSocketFactory.getSecurityProperty
                                         ("ssl.ServerSocketFactory.provider");
             if (clsName != null) {
                 log("setting up default SSLServerSocketFactory");
@@ -97,19 +91,20 @@ public abstract class SSLServerSocketFactory extends ServerSocketFactory
                     Class<?> cls = null;
                     try {
                         cls = Class.forName(clsName);
-                    } catch (ClassNotFoundException e) {
-                        ClassLoader cl = ClassLoader.getSystemClassLoader();
+                    } catch (final ClassNotFoundException e) {
+                        final ClassLoader cl = ClassLoader.getSystemClassLoader();
                         if (cl != null) {
                             cls = cl.loadClass(clsName);
                         }
                     }
                     log("class " + clsName + " is loaded");
                     @SuppressWarnings("deprecation")
+                    final
                     SSLServerSocketFactory fac = (SSLServerSocketFactory)cls.newInstance();
                     log("instantiated an instance of class " + clsName);
                     theFactory = fac;
                     return fac;
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     log("SSLServerSocketFactory instantiation failed: " + e);
                     theFactory = new DefaultSSLServerSocketFactory(e);
                     return theFactory;
@@ -119,7 +114,7 @@ public abstract class SSLServerSocketFactory extends ServerSocketFactory
 
         try {
             return SSLContext.getDefault().getServerSocketFactory();
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             return new DefaultSSLServerSocketFactory(e);
         }
     }
@@ -173,7 +168,7 @@ class DefaultSSLServerSocketFactory extends SSLServerSocketFactory {
 
     private final Exception reason;
 
-    DefaultSSLServerSocketFactory(Exception reason) {
+    DefaultSSLServerSocketFactory(final Exception reason) {
         this.reason = reason;
     }
 
@@ -189,14 +184,14 @@ class DefaultSSLServerSocketFactory extends SSLServerSocketFactory {
 
 
     @Override
-    public ServerSocket createServerSocket(int port)
+    public ServerSocket createServerSocket(final int port)
     throws IOException
     {
         return throwException();
     }
 
     @Override
-    public ServerSocket createServerSocket(int port, int backlog)
+    public ServerSocket createServerSocket(final int port, final int backlog)
     throws IOException
     {
         return throwException();
@@ -204,7 +199,7 @@ class DefaultSSLServerSocketFactory extends SSLServerSocketFactory {
 
     @Override
     public ServerSocket
-    createServerSocket(int port, int backlog, InetAddress ifAddress)
+    createServerSocket(final int port, final int backlog, final InetAddress ifAddress)
     throws IOException
     {
         return throwException();

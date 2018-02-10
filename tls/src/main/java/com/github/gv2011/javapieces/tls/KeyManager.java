@@ -25,7 +25,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.KeyManagerFactory;
+
 
 /**
  * This is the base interface for JSSE key managers.

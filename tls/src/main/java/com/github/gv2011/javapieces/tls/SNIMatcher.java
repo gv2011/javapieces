@@ -25,11 +25,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSocket;
+
 
 /**
  * Instances of this class represent a matcher that performs match
@@ -68,7 +64,7 @@ public abstract class SNIMatcher {
      * @throws IllegalArgumentException if {@code type} is not in the range
      *         of 0 to 255, inclusive.
      */
-    protected SNIMatcher(int type) {
+    protected SNIMatcher(final int type) {
         if (type < 0) {
             throw new IllegalArgumentException(
                 "Server name type cannot be less than zero");

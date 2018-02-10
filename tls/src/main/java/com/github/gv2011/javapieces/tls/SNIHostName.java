@@ -35,11 +35,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIHostNameMatcher;
-import javax.net.ssl.SNIMatcher;
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.StandardConstants;
+
 
 /**
  * Instances of this class represent a server name of type
@@ -165,7 +161,7 @@ public final class SNIHostName extends SNIServerName {
      * @throws NullPointerException if {@code encoded} is {@code null}
      * @throws IllegalArgumentException if {@code encoded} is illegal
      */
-    public SNIHostName(byte[] encoded) {
+    public SNIHostName(final byte[] encoded) {
         // NullPointerException will be thrown if {@code encoded} is null
         super(StandardConstants.SNI_HOST_NAME, encoded);
 
@@ -174,11 +170,11 @@ public final class SNIHostName extends SNIServerName {
         try {
             // Please don't use {@link String} constructors because they
             // do not report coding errors.
-            CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+            final CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
                     .onMalformedInput(CodingErrorAction.REPORT)
                     .onUnmappableCharacter(CodingErrorAction.REPORT);
 
-            this.hostname = IDN.toASCII(
+            hostname = IDN.toASCII(
                     decoder.decode(ByteBuffer.wrap(encoded)).toString());
         } catch (RuntimeException | CharacterCodingException e) {
             throw new IllegalArgumentException(
@@ -221,7 +217,7 @@ public final class SNIHostName extends SNIServerName {
      *         equal to this instance
      */
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(final Object other) {
         if (this == other) {
             return true;
         }
@@ -305,7 +301,7 @@ public final class SNIHostName extends SNIServerName {
      * @throws java.util.regex.PatternSyntaxException if the regular expression's
      *         syntax is invalid
      */
-    public static SNIMatcher createSNIMatcher(String regex) {
+    public static SNIMatcher createSNIMatcher(final String regex) {
         if (regex == null) {
             throw new NullPointerException(
                 "The regular expression cannot be null");
@@ -344,7 +340,7 @@ public final class SNIHostName extends SNIServerName {
          * @throws PatternSyntaxException if the regular expression's syntax
          *         is invalid
          */
-        SNIHostNameMatcher(String regex) {
+        SNIHostNameMatcher(final String regex) {
             super(StandardConstants.SNI_HOST_NAME);
             pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
         }
@@ -366,7 +362,7 @@ public final class SNIHostName extends SNIServerName {
          * @see SNIServerName
          */
         @Override
-        public boolean matches(SNIServerName serverName) {
+        public boolean matches(final SNIServerName serverName) {
             if (serverName == null) {
                 throw new NullPointerException(
                     "The SNIServerName argument cannot be null");
@@ -389,7 +385,7 @@ public final class SNIHostName extends SNIServerName {
             }
 
             // Let's first try the ascii name matching
-            String asciiName = hostname.getAsciiName();
+            final String asciiName = hostname.getAsciiName();
             if (pattern.matcher(asciiName).matches()) {
                 return true;
             }

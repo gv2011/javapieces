@@ -25,9 +25,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.HandshakeStatus;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.Status;
+
 
 /**
  * An encapsulation of the result state produced by
@@ -195,8 +193,8 @@ public class SSLEngineResult {
      *          arguments are null, or if {@code bytesConsumed} or
      *          {@code bytesProduced} is negative.
      */
-    public SSLEngineResult(Status status, HandshakeStatus handshakeStatus,
-            int bytesConsumed, int bytesProduced) {
+    public SSLEngineResult(final Status status, final HandshakeStatus handshakeStatus,
+            final int bytesConsumed, final int bytesProduced) {
         this(status, handshakeStatus, bytesConsumed, bytesProduced, -1);
     }
 
@@ -227,8 +225,8 @@ public class SSLEngineResult {
      *
      * @since   9
      */
-    public SSLEngineResult(Status status, HandshakeStatus handshakeStatus,
-            int bytesConsumed, int bytesProduced, long sequenceNumber) {
+    public SSLEngineResult(final Status status, final HandshakeStatus handshakeStatus,
+            final int bytesConsumed, final int bytesProduced, final long sequenceNumber) {
 
         if ((status == null) || (handshakeStatus == null) ||
                 (bytesConsumed < 0) || (bytesProduced < 0)) {

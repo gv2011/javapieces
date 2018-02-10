@@ -25,12 +25,11 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import java.util.*;
-
-import javax.net.ssl.ManagerFactoryParameters;
-import javax.net.ssl.X509KeyManager;
-
-import java.security.KeyStore.*;
+import java.security.KeyStore.Builder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * A parameters object for X509KeyManagers that encapsulates a List
@@ -53,7 +52,7 @@ public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
      * @param builder the Builder object
      * @exception NullPointerException if builder is null
      */
-    public KeyStoreBuilderParameters(Builder builder) {
+    public KeyStoreBuilderParameters(final Builder builder) {
         parameters = Collections.singletonList(Objects.requireNonNull(builder));
     }
 
@@ -66,13 +65,13 @@ public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
      * @exception NullPointerException if parameters is null
      * @exception IllegalArgumentException if parameters is an empty list
      */
-    public KeyStoreBuilderParameters(List<Builder> parameters) {
+    public KeyStoreBuilderParameters(final List<Builder> parameters) {
         if (parameters.isEmpty()) {
             throw new IllegalArgumentException();
         }
 
         this.parameters = Collections.unmodifiableList(
-            new ArrayList<Builder>(parameters));
+            new ArrayList<>(parameters));
     }
 
     /**

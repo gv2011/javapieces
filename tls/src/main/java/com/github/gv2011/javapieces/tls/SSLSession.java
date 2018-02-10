@@ -27,9 +27,7 @@ package com.github.gv2011.javapieces.tls;
 
 import java.security.Principal;
 
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSessionContext;
+
 
 /**
  * In SSL, sessions are used to describe an ongoing relationship between

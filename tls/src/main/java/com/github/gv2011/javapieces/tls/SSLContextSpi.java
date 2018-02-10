@@ -27,15 +27,7 @@ package com.github.gv2011.javapieces.tls;
 
 import java.security.*;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSessionContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
+
 
 /**
  * This class defines the <i>Service Provider Interface</i> (<b>SPI</b>)
@@ -153,9 +145,9 @@ public abstract class SSLContextSpi {
 
     private SSLSocket getDefaultSocket() {
         try {
-            SSLSocketFactory factory = engineGetSocketFactory();
+            final SSLSocketFactory factory = engineGetSocketFactory();
             return (SSLSocket)factory.createSocket();
-        } catch (java.io.IOException e) {
+        } catch (final java.io.IOException e) {
             throw new UnsupportedOperationException("Could not obtain parameters", e);
         }
     }
@@ -179,7 +171,7 @@ public abstract class SSLContextSpi {
      * @since 1.6
      */
     protected SSLParameters engineGetDefaultSSLParameters() {
-        SSLSocket socket = getDefaultSocket();
+        final SSLSocket socket = getDefaultSocket();
         return socket.getSSLParameters();
     }
 
@@ -203,8 +195,8 @@ public abstract class SSLContextSpi {
      * @since 1.6
      */
     protected SSLParameters engineGetSupportedSSLParameters() {
-        SSLSocket socket = getDefaultSocket();
-        SSLParameters params = new SSLParameters();
+        final SSLSocket socket = getDefaultSocket();
+        final SSLParameters params = new SSLParameters();
         params.setCipherSuites(socket.getSupportedCipherSuites());
         params.setProtocols(socket.getSupportedProtocols());
         return params;

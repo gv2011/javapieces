@@ -26,11 +26,11 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSocket;
+
 
 
 /**
@@ -98,7 +98,7 @@ public abstract class SSLServerSocket extends ServerSocket {
      *         65535, inclusive.
      * @see    SecurityManager#checkListen
      */
-    protected SSLServerSocket(int port)
+    protected SSLServerSocket(final int port)
     throws IOException
         { super(port); }
 
@@ -134,7 +134,7 @@ public abstract class SSLServerSocket extends ServerSocket {
      *         65535, inclusive.
      * @see    SecurityManager#checkListen
      */
-    protected SSLServerSocket(int port, int backlog)
+    protected SSLServerSocket(final int port, final int backlog)
     throws IOException
         { super(port, backlog); }
 
@@ -179,7 +179,7 @@ public abstract class SSLServerSocket extends ServerSocket {
      *         65535, inclusive.
      * @see    SecurityManager#checkListen
      */
-    protected SSLServerSocket(int port, int backlog, InetAddress address)
+    protected SSLServerSocket(final int port, final int backlog, final InetAddress address)
     throws IOException
         { super(port, backlog, address); }
 
@@ -495,7 +495,7 @@ public abstract class SSLServerSocket extends ServerSocket {
      * @since 1.7
      */
     public SSLParameters getSSLParameters() {
-        SSLParameters parameters = new SSLParameters();
+        final SSLParameters parameters = new SSLParameters();
 
         parameters.setCipherSuites(getEnabledCipherSuites());
         parameters.setProtocols(getEnabledProtocols());
@@ -536,7 +536,7 @@ public abstract class SSLServerSocket extends ServerSocket {
      *
      * @since 1.7
      */
-    public void setSSLParameters(SSLParameters params) {
+    public void setSSLParameters(final SSLParameters params) {
         String[] s;
         s = params.getCipherSuites();
         if (s != null) {

@@ -27,20 +27,13 @@
 package com.github.gv2011.javapieces.tls;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import javax.net.ssl.ExtendedSSLSession;
-import javax.net.ssl.HandshakeCompletedListener;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509ExtendedTrustManager;
+
 
 /**
  * This class extends <code>Socket</code>s and provides secure
@@ -179,7 +172,7 @@ public abstract class SSLSocket extends Socket
      *         65535, inclusive.
      * @see SecurityManager#checkConnect
      */
-    protected SSLSocket(String host, int port)
+    protected SSLSocket(final String host, final int port)
     throws IOException, UnknownHostException
         { super(host, port); }
 
@@ -204,7 +197,7 @@ public abstract class SSLSocket extends Socket
      * @throws NullPointerException if <code>address</code> is null.
      * @see SecurityManager#checkConnect
      */
-    protected SSLSocket(InetAddress address, int port)
+    protected SSLSocket(final InetAddress address, final int port)
     throws IOException
         { super(address, port); }
 
@@ -235,8 +228,8 @@ public abstract class SSLSocket extends Socket
      *         which is between 0 and 65535, inclusive.
      * @see SecurityManager#checkConnect
      */
-    protected SSLSocket(String host, int port,
-        InetAddress clientAddress, int clientPort)
+    protected SSLSocket(final String host, final int port,
+        final InetAddress clientAddress, final int clientPort)
     throws IOException, UnknownHostException
         { super(host, port, clientAddress, clientPort); }
 
@@ -266,8 +259,8 @@ public abstract class SSLSocket extends Socket
      * @throws NullPointerException if <code>address</code> is null.
      * @see SecurityManager#checkConnect
      */
-    protected SSLSocket(InetAddress address, int port,
-        InetAddress clientAddress, int clientPort)
+    protected SSLSocket(final InetAddress address, final int port,
+        final InetAddress clientAddress, final int clientPort)
     throws IOException
         { super(address, port, clientAddress, clientPort); }
 
@@ -649,7 +642,7 @@ public abstract class SSLSocket extends Socket
      * @since 1.6
      */
     public SSLParameters getSSLParameters() {
-        SSLParameters params = new SSLParameters();
+        final SSLParameters params = new SSLParameters();
         params.setCipherSuites(getEnabledCipherSuites());
         params.setProtocols(getEnabledProtocols());
         if (getNeedClientAuth()) {
@@ -685,7 +678,7 @@ public abstract class SSLSocket extends Socket
      *    the setEnabledProtocols() call fails
      * @since 1.6
      */
-    public void setSSLParameters(SSLParameters params) {
+    public void setSSLParameters(final SSLParameters params) {
         String[] s;
         s = params.getCipherSuites();
         if (s != null) {
@@ -818,7 +811,7 @@ public abstract class SSLSocket extends Socket
      * @since 9
      */
     public void setHandshakeApplicationProtocolSelector(
-            BiFunction<SSLSocket, List<String>, String> selector) {
+            final BiFunction<SSLSocket, List<String>, String> selector) {
         throw new UnsupportedOperationException();
     }
 

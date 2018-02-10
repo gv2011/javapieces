@@ -26,10 +26,9 @@
 package com.github.gv2011.javapieces.tls;
 
 import java.util.Arrays;
+import java.util.List;
 
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.StandardConstants;
+
 
 /**
  * Instances of this class represent a server name in a Server Name
@@ -75,7 +74,7 @@ public abstract class SNIServerName {
      *         of 0 to 255, inclusive.
      * @throws NullPointerException if {@code encoded} is null
      */
-    protected SNIServerName(int type, byte[] encoded) {
+    protected SNIServerName(final int type, final byte[] encoded) {
         if (type < 0) {
             throw new IllegalArgumentException(
                 "Server name type cannot be less than zero");
@@ -119,7 +118,7 @@ public abstract class SNIServerName {
      *         encoded value as this server name.
      */
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(final Object other) {
         if (this == other) {
             return true;
         }
@@ -128,9 +127,9 @@ public abstract class SNIServerName {
             return false;
         }
 
-        SNIServerName that = (SNIServerName)other;
-        return (this.type == that.type) &&
-                    Arrays.equals(this.encoded, that.encoded);
+        final SNIServerName that = (SNIServerName)other;
+        return (type == that.type) &&
+                    Arrays.equals(encoded, that.encoded);
     }
 
     /**
@@ -192,21 +191,21 @@ public abstract class SNIServerName {
     }
 
     // convert byte array to hex string
-    private static String toHexString(byte[] bytes) {
+    private static String toHexString(final byte[] bytes) {
         if (bytes.length == 0) {
             return "(empty)";
         }
 
-        StringBuilder sb = new StringBuilder(bytes.length * 3 - 1);
+        final StringBuilder sb = new StringBuilder(bytes.length * 3 - 1);
         boolean isInitial = true;
-        for (byte b : bytes) {
+        for (final byte b : bytes) {
             if (isInitial) {
                 isInitial = false;
             } else {
                 sb.append(':');
             }
 
-            int k = b & 0xFF;
+            final int k = b & 0xFF;
             sb.append(HEXES[k >>> 4]);
             sb.append(HEXES[k & 0xF]);
         }

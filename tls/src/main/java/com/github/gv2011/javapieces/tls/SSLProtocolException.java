@@ -26,7 +26,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.SSLException;
+
 
 /**
  * Reports an error in the operation of the SSL protocol.  Normally
@@ -46,7 +46,7 @@ class SSLProtocolException extends SSLException
      *
      * @param reason describes the problem.
      */
-    public SSLProtocolException(String reason)
+    public SSLProtocolException(final String reason)
     {
         super(reason);
     }

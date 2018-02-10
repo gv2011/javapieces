@@ -25,19 +25,13 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import java.security.*;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Provider;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.util.Objects;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLContextSpi;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLPermission;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSessionContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
 
 import sun.security.jca.GetInstance;
 
@@ -78,8 +72,8 @@ public class SSLContext {
      * @param provider the provider
      * @param protocol the protocol
      */
-    protected SSLContext(SSLContextSpi contextSpi, Provider provider,
-            String protocol) {
+    protected SSLContext(final SSLContextSpi contextSpi, final Provider provider,
+            final String protocol) {
         this.contextSpi = contextSpi;
         this.provider = provider;
         this.protocol = protocol;
@@ -124,11 +118,11 @@ public class SSLContext {
      *          {@code SSLPermission("setDefaultSSLContext")}
      * @since 1.6
      */
-    public static synchronized void setDefault(SSLContext context) {
+    public static synchronized void setDefault(final SSLContext context) {
         if (context == null) {
             throw new NullPointerException();
         }
-        SecurityManager sm = System.getSecurityManager();
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new SSLPermission("setDefaultSSLContext"));
         }
@@ -172,10 +166,10 @@ public class SSLContext {
      *
      * @see java.security.Provider
      */
-    public static SSLContext getInstance(String protocol)
+    public static SSLContext getInstance(final String protocol)
             throws NoSuchAlgorithmException {
         Objects.requireNonNull(protocol, "null protocol name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("SSLContext", SSLContextSpi.class, protocol);
         return new SSLContext((SSLContextSpi)instance.impl, instance.provider,
                 protocol);
@@ -217,10 +211,10 @@ public class SSLContext {
      *
      * @see java.security.Provider
      */
-    public static SSLContext getInstance(String protocol, String provider)
+    public static SSLContext getInstance(final String protocol, final String provider)
             throws NoSuchAlgorithmException, NoSuchProviderException {
         Objects.requireNonNull(protocol, "null protocol name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("SSLContext", SSLContextSpi.class, protocol, provider);
         return new SSLContext((SSLContextSpi)instance.impl, instance.provider,
                 protocol);
@@ -255,10 +249,10 @@ public class SSLContext {
      *
      * @see java.security.Provider
      */
-    public static SSLContext getInstance(String protocol, Provider provider)
+    public static SSLContext getInstance(final String protocol, final Provider provider)
             throws NoSuchAlgorithmException {
         Objects.requireNonNull(protocol, "null protocol name");
-        GetInstance.Instance instance = GetInstance.getInstance
+        final GetInstance.Instance instance = GetInstance.getInstance
                 ("SSLContext", SSLContextSpi.class, protocol, provider);
         return new SSLContext((SSLContextSpi)instance.impl, instance.provider,
                 protocol);
@@ -274,7 +268,7 @@ public class SSLContext {
      * @return the protocol name of this {@code SSLContext} object.
      */
     public final String getProtocol() {
-        return this.protocol;
+        return protocol;
     }
 
     /**
@@ -283,7 +277,7 @@ public class SSLContext {
      * @return the provider of this {@code SSLContext} object
      */
     public final Provider getProvider() {
-        return this.provider;
+        return provider;
     }
 
     /**
@@ -295,15 +289,16 @@ public class SSLContext {
      * <P>
      * Only the first instance of a particular key and/or trust manager
      * implementation type in the array is used.  (For example, only
-     * the first javax.net.ssl.X509KeyManager in the array will be used.)
+     * the first com.github.gv2011.javapieces.tls.X509KeyManager in
+     * the array will be used.)
      *
      * @param km the sources of authentication keys or null
      * @param tm the sources of peer authentication trust decisions or null
      * @param random the source of randomness for this generator or null
      * @throws KeyManagementException if this operation fails
      */
-    public final void init(KeyManager[] km, TrustManager[] tm,
-                                SecureRandom random)
+    public final void init(final KeyManager[] km, final TrustManager[] tm,
+                                final SecureRandom random)
         throws KeyManagementException {
         contextSpi.engineInit(km, tm, random);
     }
@@ -357,8 +352,8 @@ public class SSLContext {
     public final SSLEngine createSSLEngine() {
         try {
             return contextSpi.engineCreateSSLEngine();
-        } catch (AbstractMethodError e) {
-            UnsupportedOperationException unsup =
+        } catch (final AbstractMethodError e) {
+            final UnsupportedOperationException unsup =
                 new UnsupportedOperationException(
                     "Provider: " + getProvider() +
                     " doesn't support this operation");
@@ -386,11 +381,11 @@ public class SSLContext {
      *          initialization and the {@code init()} has not been called
      * @since   1.5
      */
-    public final SSLEngine createSSLEngine(String peerHost, int peerPort) {
+    public final SSLEngine createSSLEngine(final String peerHost, final int peerPort) {
         try {
             return contextSpi.engineCreateSSLEngine(peerHost, peerPort);
-        } catch (AbstractMethodError e) {
-            UnsupportedOperationException unsup =
+        } catch (final AbstractMethodError e) {
+            final UnsupportedOperationException unsup =
                 new UnsupportedOperationException(
                     "Provider: " + getProvider() +
                     " does not support this operation");

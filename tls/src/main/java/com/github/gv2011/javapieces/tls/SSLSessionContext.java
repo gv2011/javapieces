@@ -28,7 +28,6 @@ package com.github.gv2011.javapieces.tls;
 
 import java.util.Enumeration;
 
-import javax.net.ssl.SSLSession;
 
 
 /**

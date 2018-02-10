@@ -26,7 +26,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.SSLException;
+
 
 /**
  * Indicates that the peer's identity has not been verified.
@@ -51,7 +51,7 @@ class SSLPeerUnverifiedException extends SSLException
      *
      * @param reason describes the problem.
      */
-    public SSLPeerUnverifiedException(String reason)
+    public SSLPeerUnverifiedException(final String reason)
     {
         super(reason);
     }

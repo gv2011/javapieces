@@ -28,9 +28,7 @@ package com.github.gv2011.javapieces.tls;
 import java.net.Socket;
 import java.security.cert.X509Certificate;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLParameters;
+
 
 import com.github.gv2011.javapieces.tls.X509TrustManager;
 

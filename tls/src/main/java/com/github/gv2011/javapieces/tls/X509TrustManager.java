@@ -25,9 +25,10 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import java.security.cert.*;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
-import javax.net.ssl.TrustManager;
+
 
 /**
  * Instance of this interface manage which X509 certificates

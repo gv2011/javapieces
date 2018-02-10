@@ -30,18 +30,7 @@ import java.nio.ReadOnlyBufferException;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import javax.net.ssl.ExtendedSSLSession;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLEngineResult;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSessionContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509ExtendedTrustManager;
+
 
 
 /**
@@ -417,7 +406,7 @@ public abstract class SSLEngine {
      * @see     SSLContext#createSSLEngine(String, int)
      * @see     SSLSessionContext
      */
-    protected SSLEngine(String peerHost, int peerPort) {
+    protected SSLEngine(final String peerHost, final int peerPort) {
         this.peerHost = peerHost;
         this.peerPort = peerPort;
     }
@@ -479,8 +468,8 @@ public abstract class SSLEngine {
      *          has not yet been set.
      * @see     #wrap(ByteBuffer [], int, int, ByteBuffer)
      */
-    public SSLEngineResult wrap(ByteBuffer src,
-            ByteBuffer dst) throws SSLException {
+    public SSLEngineResult wrap(final ByteBuffer src,
+            final ByteBuffer dst) throws SSLException {
         return wrap(new ByteBuffer [] { src }, 0, 1, dst);
     }
 
@@ -516,8 +505,8 @@ public abstract class SSLEngine {
      *          has not yet been set.
      * @see     #wrap(ByteBuffer [], int, int, ByteBuffer)
      */
-    public SSLEngineResult wrap(ByteBuffer [] srcs,
-            ByteBuffer dst) throws SSLException {
+    public SSLEngineResult wrap(final ByteBuffer [] srcs,
+            final ByteBuffer dst) throws SSLException {
         if (srcs == null) {
             throw new IllegalArgumentException("src == null");
         }
@@ -634,8 +623,8 @@ public abstract class SSLEngine {
      *          has not yet been set.
      * @see     #unwrap(ByteBuffer, ByteBuffer [], int, int)
      */
-    public SSLEngineResult unwrap(ByteBuffer src,
-            ByteBuffer dst) throws SSLException {
+    public SSLEngineResult unwrap(final ByteBuffer src,
+            final ByteBuffer dst) throws SSLException {
         return unwrap(src, new ByteBuffer [] { dst }, 0, 1);
     }
 
@@ -671,8 +660,8 @@ public abstract class SSLEngine {
      *          has not yet been set.
      * @see     #unwrap(ByteBuffer, ByteBuffer [], int, int)
      */
-    public SSLEngineResult unwrap(ByteBuffer src,
-            ByteBuffer [] dsts) throws SSLException {
+    public SSLEngineResult unwrap(final ByteBuffer src,
+            final ByteBuffer [] dsts) throws SSLException {
         if (dsts == null) {
             throw new IllegalArgumentException("dsts == null");
         }
@@ -1241,7 +1230,7 @@ public abstract class SSLEngine {
      * @since 1.6
      */
     public SSLParameters getSSLParameters() {
-        SSLParameters params = new SSLParameters();
+        final SSLParameters params = new SSLParameters();
         params.setCipherSuites(getEnabledCipherSuites());
         params.setProtocols(getEnabledProtocols());
         if (getNeedClientAuth()) {
@@ -1277,7 +1266,7 @@ public abstract class SSLEngine {
      *    the setEnabledProtocols() call fails
      * @since 1.6
      */
-    public void setSSLParameters(SSLParameters params) {
+    public void setSSLParameters(final SSLParameters params) {
         String[] s;
         s = params.getCipherSuites();
         if (s != null) {
@@ -1410,7 +1399,7 @@ public abstract class SSLEngine {
      * @since 9
      */
     public void setHandshakeApplicationProtocolSelector(
-            BiFunction<SSLEngine, List<String>, String> selector) {
+            final BiFunction<SSLEngine, List<String>, String> selector) {
         throw new UnsupportedOperationException();
     }
 

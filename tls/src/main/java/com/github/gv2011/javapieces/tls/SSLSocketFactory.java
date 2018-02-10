@@ -26,19 +26,16 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import java.net.*;
-import javax.net.SocketFactory;
-import javax.net.ssl.DefaultSSLSocketFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.*;
-import java.util.Locale;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.SocketException;
+import java.security.AccessController;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivilegedAction;
 
-import sun.security.action.GetPropertyAction;
+import javax.net.SocketFactory;
 
 /**
  * <code>SSLSocketFactory</code>s create <code>SSLSocket</code>s.

@@ -25,8 +25,7 @@
 
 package com.github.gv2011.javapieces.tls;
 
-import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIServerName;
+
 
 /**
  * Standard constants definitions
@@ -38,7 +37,7 @@ public final class StandardConstants {
     // Suppress default constructor for noninstantiability
     private StandardConstants() {
         throw new AssertionError(
-            "No javax.net.ssl.StandardConstants instances for you!");
+            "No com.github.gv2011.javapieces.tls.StandardConstants instances for you!");
     }
 
     /**

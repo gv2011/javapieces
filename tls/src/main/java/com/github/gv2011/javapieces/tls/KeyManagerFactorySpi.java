@@ -27,9 +27,7 @@ package com.github.gv2011.javapieces.tls;
 
 import java.security.*;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.ManagerFactoryParameters;
+
 
 /**
  * This class defines the <i>Service Provider Interface</i> (<b>SPI</b>)

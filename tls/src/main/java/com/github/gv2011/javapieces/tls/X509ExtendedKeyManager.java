@@ -27,8 +27,7 @@ package com.github.gv2011.javapieces.tls;
 
 import java.security.Principal;
 
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.X509KeyManager;
+
 
 /**
  * Abstract class that provides for extension of the X509KeyManager
@@ -67,8 +66,8 @@ public abstract class X509ExtendedKeyManager implements X509KeyManager {
      * @return the alias name for the desired key, or null if there
      *          are no matches.
      */
-    public String chooseEngineClientAlias(String[] keyType,
-            Principal[] issuers, SSLEngine engine) {
+    public String chooseEngineClientAlias(final String[] keyType,
+            final Principal[] issuers, final SSLEngine engine) {
         return null;
     }
 
@@ -90,8 +89,8 @@ public abstract class X509ExtendedKeyManager implements X509KeyManager {
      * @return the alias name for the desired key, or null if there
      *          are no matches.
      */
-    public String chooseEngineServerAlias(String keyType,
-            Principal[] issuers, SSLEngine engine) {
+    public String chooseEngineServerAlias(final String keyType,
+            final Principal[] issuers, final SSLEngine engine) {
         return null;
     }
 
