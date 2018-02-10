@@ -24,6 +24,8 @@
  */
 
 /**
+ * Original: javax.net.ssl
+ *
  * Provides classes for the secure socket package. Using the secure
  * socket classes, you can communicate using SSL or a related security
  * protocol to reliably detect any errors introduced into the network
