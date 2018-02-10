@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2001, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
  * questions.
  */
 
-package com.github.gv2011.javapieces.tls;
+package com.github.gv2011.javapieces.jca;
 
 /*-
  * #%L
@@ -50,31 +50,21 @@ package com.github.gv2011.javapieces.tls;
  * THE SOFTWARE.
  * #L%
  */
-import java.util.EventListener;
-
-
 /**
- * This interface is implemented by any class which wants to receive
- * notifications about the completion of an SSL protocol handshake
- * on a given SSL connection.
+ * Simple class encapsulating a service type and algorithm for lookup.
+ * Put in a separate file rather than nested to allow import via ...jca.*.
  *
- * <P> When an SSL handshake completes, new security parameters will
- * have been established.  Those parameters always include the security
- * keys used to protect messages.  They may also include parameters
- * associated with a new <em>session</em> such as authenticated
- * peer identity and a new SSL cipher suite.
- *
- * @since 1.4
- * @author David Brownell
+ * @author  Andreas Sterbenz
+ * @since   1.5
  */
-public interface HandshakeCompletedListener extends EventListener
-{
-    /**
-     * This method is invoked on registered objects
-     * when a SSL handshake is completed.
-     *
-     * @param event the event identifying when the SSL Handshake
-     *          completed on a given SSL connection
-     */
-    void handshakeCompleted(HandshakeCompletedEvent event);
+public final class ServiceId {
+
+    public final String type;
+    public final String algorithm;
+
+    public ServiceId(String type, String algorithm) {
+        this.type = type;
+        this.algorithm = algorithm;
+    }
+
 }

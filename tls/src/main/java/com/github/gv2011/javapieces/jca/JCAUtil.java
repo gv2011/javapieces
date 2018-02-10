@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2001, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
  * questions.
  */
 
-package com.github.gv2011.javapieces.tls;
+package com.github.gv2011.javapieces.jca;
 
 /*-
  * #%L
@@ -50,31 +50,48 @@ package com.github.gv2011.javapieces.tls;
  * THE SOFTWARE.
  * #L%
  */
-import java.util.EventListener;
+import java.security.SecureRandom;
+
 
 
 /**
- * This interface is implemented by any class which wants to receive
- * notifications about the completion of an SSL protocol handshake
- * on a given SSL connection.
+ * Collection of static utility methods used by the security framework.
  *
- * <P> When an SSL handshake completes, new security parameters will
- * have been established.  Those parameters always include the security
- * keys used to protect messages.  They may also include parameters
- * associated with a new <em>session</em> such as authenticated
- * peer identity and a new SSL cipher suite.
- *
- * @since 1.4
- * @author David Brownell
+ * @author  Andreas Sterbenz
+ * @since   1.5
  */
-public interface HandshakeCompletedListener extends EventListener
-{
+public final class JCAUtil {
+
+    private JCAUtil() {
+        // no instantiation
+    }
+
+    // size of the temporary arrays we use. Should fit into the CPU's 1st
+    // level cache and could be adjusted based on the platform
+    private static final int ARRAY_SIZE = 4096;
+
     /**
-     * This method is invoked on registered objects
-     * when a SSL handshake is completed.
-     *
-     * @param event the event identifying when the SSL Handshake
-     *          completed on a given SSL connection
+     * Get the size of a temporary buffer array to use in order to be
+     * cache efficient. totalSize indicates the total amount of data to
+     * be buffered. Used by the engineUpdate(ByteBuffer) methods.
      */
-    void handshakeCompleted(HandshakeCompletedEvent event);
+    public static int getTempArraySize(final int totalSize) {
+        return Math.min(ARRAY_SIZE, totalSize);
+    }
+
+    // cached SecureRandom instance
+    private static class CachedSecureRandomHolder {
+        public static SecureRandom instance = new SecureRandom();
+    }
+
+    /**
+     * Get a SecureRandom instance. This method should be used by JDK
+     * internal code in favor of calling "new SecureRandom()". That needs to
+     * iterate through the provider table to find the default SecureRandom
+     * implementation, which is fairly inefficient.
+     */
+    public static SecureRandom getSecureRandom() {
+        return CachedSecureRandomHolder.instance;
+    }
+
 }
