@@ -63,7 +63,6 @@ final class RSAClientKeyExchange extends HandshakeMessage {
      * it, using its RSA private key.  Result is the same size as the
      * server's public key, and uses PKCS #1 block format 02.
      */
-    @SuppressWarnings("deprecation")
     RSAClientKeyExchange(ProtocolVersion protocolVersion,
             ProtocolVersion maxVersion,
             SecureRandom generator, PublicKey publicKey) throws IOException {
@@ -74,8 +73,8 @@ final class RSAClientKeyExchange extends HandshakeMessage {
         this.protocolVersion = protocolVersion;
 
         try {
-            String s = protocolVersion.useTLS12PlusSpec() ?
-                "SunTls12RsaPremasterSecret" : "SunTlsRsaPremasterSecret";
+            String s = ((protocolVersion.v >= ProtocolVersion.TLS12.v) ?
+                "SunTls12RsaPremasterSecret" : "SunTlsRsaPremasterSecret");
             KeyGenerator kg = JsseJce.getKeyGenerator(s);
             kg.init(new TlsRsaPremasterSecretParameterSpec(
                     maxVersion.v, protocolVersion.v), generator);
@@ -118,7 +117,6 @@ final class RSAClientKeyExchange extends HandshakeMessage {
      * Server gets the PKCS #1 (block format 02) data, decrypts
      * it with its private key.
      */
-    @SuppressWarnings("deprecation")
     RSAClientKeyExchange(ProtocolVersion currentVersion,
             ProtocolVersion maxVersion,
             SecureRandom generator, HandshakeInStream input,
@@ -129,7 +127,7 @@ final class RSAClientKeyExchange extends HandshakeMessage {
                  privateKey.getAlgorithm());
         }
 
-        if (currentVersion.useTLS10PlusSpec()) {
+        if (currentVersion.v >= ProtocolVersion.TLS10.v) {
             encrypted = input.getBytes16();
         } else {
             encrypted = new byte [messageSize];
@@ -239,7 +237,7 @@ final class RSAClientKeyExchange extends HandshakeMessage {
 
     @Override
     int messageLength() {
-        if (protocolVersion.useTLS10PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS10.v) {
             return encrypted.length + 2;
         } else {
             return encrypted.length;
@@ -248,7 +246,7 @@ final class RSAClientKeyExchange extends HandshakeMessage {
 
     @Override
     void send(HandshakeOutStream s) throws IOException {
-        if (protocolVersion.useTLS10PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS10.v) {
             s.putBytes16(encrypted);
         } else {
             s.write(encrypted);

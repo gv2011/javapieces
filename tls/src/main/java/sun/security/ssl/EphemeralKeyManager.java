@@ -36,12 +36,12 @@ import java.security.*;
 final class EphemeralKeyManager {
 
     // indices for the keys array below
-    private static final int INDEX_RSA512 = 0;
-    private static final int INDEX_RSA1024 = 1;
+    private final static int INDEX_RSA512 = 0;
+    private final static int INDEX_RSA1024 = 1;
 
     /*
      * Current cached RSA KeyPairs. Elements are never null.
-     * Indexed via the constants above.
+     * Indexed via the the constants above.
      */
     private final EphemeralKeyPair[] keys = new EphemeralKeyPair[] {
         new EphemeralKeyPair(null),
@@ -87,10 +87,10 @@ final class EphemeralKeyManager {
     private static class EphemeralKeyPair {
 
         // maximum number of times a KeyPair is used
-        private static final int MAX_USE = 200;
+        private final static int MAX_USE = 200;
 
         // maximum time interval in which the keypair is used (1 hour in ms)
-        private static final long USE_INTERVAL = 3600*1000;
+        private final static long USE_INTERVAL = 3600*1000;
 
         private KeyPair keyPair;
         private int uses;

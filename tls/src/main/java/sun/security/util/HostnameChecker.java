@@ -28,17 +28,18 @@ package sun.security.util;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.*;
+
 import java.security.Principal;
 import java.security.cert.*;
-import java.util.*;
-import javax.security.auth.x500.X500Principal;
 
-import com.github.gv2011.javapieces.tls.SNIHostName;
+import javax.security.auth.x500.X500Principal;
+import javax.net.ssl.SNIHostName;
+
+import sun.security.ssl.Krb5Helper;
+import sun.security.x509.X500Name;
 
 import sun.net.util.IPAddressUtil;
-import sun.security.ssl.ClientKeyExchangeService;
-import sun.security.ssl.Debug;
-import sun.security.x509.X500Name;
 
 /**
  * Class to check hostnames against the names specified in a certificate as
@@ -48,25 +49,23 @@ import sun.security.x509.X500Name;
 public class HostnameChecker {
 
     // Constant for a HostnameChecker for TLS
-    public static final byte TYPE_TLS = 1;
-    private static final HostnameChecker INSTANCE_TLS =
+    public final static byte TYPE_TLS = 1;
+    private final static HostnameChecker INSTANCE_TLS =
                                         new HostnameChecker(TYPE_TLS);
 
     // Constant for a HostnameChecker for LDAP
-    public static final byte TYPE_LDAP = 2;
-    private static final HostnameChecker INSTANCE_LDAP =
+    public final static byte TYPE_LDAP = 2;
+    private final static HostnameChecker INSTANCE_LDAP =
                                         new HostnameChecker(TYPE_LDAP);
 
     // constants for subject alt names of type DNS and IP
-    private static final int ALTNAME_DNS = 2;
-    private static final int ALTNAME_IP  = 7;
-
-    private static final Debug debug = Debug.getInstance("ssl");
+    private final static int ALTNAME_DNS = 2;
+    private final static int ALTNAME_IP  = 7;
 
     // the algorithm to follow to perform the check. Currently unused.
     private final byte checkType;
 
-    private HostnameChecker(final byte checkType) {
+    private HostnameChecker(byte checkType) {
         this.checkType = checkType;
     }
 
@@ -74,7 +73,7 @@ public class HostnameChecker {
      * Get a HostnameChecker instance. checkType should be one of the
      * TYPE_* constants defined in this class.
      */
-    public static HostnameChecker getInstance(final byte checkType) {
+    public static HostnameChecker getInstance(byte checkType) {
         if (checkType == TYPE_TLS) {
             return INSTANCE_TLS;
         } else if (checkType == TYPE_LDAP) {
@@ -86,45 +85,31 @@ public class HostnameChecker {
     /**
      * Perform the check.
      *
-     * @param expectedName the expected host name or ip address
-     * @param cert the certificate to check against
-     * @param chainsToPublicCA true if the certificate chains to a public
-     *     root CA (as pre-installed in the cacerts file)
-     * @throws CertificateException if the name does not match any of
-     *     the names specified in the certificate
+     * @exception CertificateException if the name does not match any of
+     * the names specified in the certificate
      */
-    public void match(final String expectedName, final X509Certificate cert,
-                      final boolean chainsToPublicCA) throws CertificateException {
+    public void match(String expectedName, X509Certificate cert)
+            throws CertificateException {
         if (isIpAddress(expectedName)) {
            matchIP(expectedName, cert);
         } else {
-           matchDNS(expectedName, cert, chainsToPublicCA);
+           matchDNS(expectedName, cert);
         }
-    }
-
-    public void match(final String expectedName, final X509Certificate cert)
-            throws CertificateException {
-        match(expectedName, cert, false);
     }
 
     /**
      * Perform the check for Kerberos.
      */
-    public static boolean match(final String expectedName, final Principal principal) {
-        final String hostName = getServerName(principal);
+    public static boolean match(String expectedName, Principal principal) {
+        String hostName = getServerName(principal);
         return (expectedName.equalsIgnoreCase(hostName));
     }
 
     /**
      * Return the Server name from Kerberos principal.
      */
-    public static String getServerName(final Principal principal) {
-        final ClientKeyExchangeService p =
-                ClientKeyExchangeService.find("KRB5");
-        if (p == null) {
-            throw new AssertionError("Kerberos should have been available");
-        }
-        return p.getServiceHostName(principal);
+    public static String getServerName(Principal principal) {
+        return Krb5Helper.getPrincipalHostName(principal);
     }
 
     /**
@@ -136,7 +121,7 @@ public class HostnameChecker {
      * IP address, rather that it does not represent a valid DNS hostname.
      * Likewise for IP addresses when it returns false.
      */
-    private static boolean isIpAddress(final String name) {
+    private static boolean isIpAddress(String name) {
         if (IPAddressUtil.isIPv4LiteralAddress(name) ||
             IPAddressUtil.isIPv6LiteralAddress(name)) {
             return true;
@@ -153,17 +138,17 @@ public class HostnameChecker {
      * hostname. In this case, the iPAddress subjectAltName must be present
      * in the certificate and must exactly match the IP in the URI.
      */
-    private static void matchIP(final String expectedIP, final X509Certificate cert)
+    private static void matchIP(String expectedIP, X509Certificate cert)
             throws CertificateException {
-        final Collection<List<?>> subjAltNames = cert.getSubjectAlternativeNames();
+        Collection<List<?>> subjAltNames = cert.getSubjectAlternativeNames();
         if (subjAltNames == null) {
             throw new CertificateException
                                 ("No subject alternative names present");
         }
-        for (final List<?> next : subjAltNames) {
+        for (List<?> next : subjAltNames) {
             // For IP address, it needs to be exact match
             if (((Integer)next.get(0)).intValue() == ALTNAME_IP) {
-                final String ipAddress = (String)next.get(1);
+                String ipAddress = (String)next.get(1);
                 if (expectedIP.equalsIgnoreCase(ipAddress)) {
                     return;
                 } else {
@@ -175,8 +160,8 @@ public class HostnameChecker {
                                 InetAddress.getByName(ipAddress))) {
                             return;
                         }
-                    } catch (final UnknownHostException e) {
-                    } catch (final SecurityException e) {}
+                    } catch (UnknownHostException e) {
+                    } catch (SecurityException e) {}
                 }
             }
         }
@@ -196,30 +181,29 @@ public class HostnameChecker {
      * Certification Authorities are encouraged to use the dNSName instead.
      *
      * Matching is performed using the matching rules specified by
-     * [RFC5280].  If more than one identity of a given type is present in
+     * [RFC2459].  If more than one identity of a given type is present in
      * the certificate (e.g., more than one dNSName name, a match in any one
      * of the set is considered acceptable.)
      */
-    private void matchDNS(final String expectedName, final X509Certificate cert,
-                          final boolean chainsToPublicCA)
+    private void matchDNS(String expectedName, X509Certificate cert)
             throws CertificateException {
         // Check that the expected name is a valid domain name.
         try {
             // Using the checking implemented in SNIHostName
-            final SNIHostName sni = new SNIHostName(expectedName);
-        } catch (final IllegalArgumentException iae) {
+            SNIHostName sni = new SNIHostName(expectedName);
+        } catch (IllegalArgumentException iae) {
             throw new CertificateException(
                 "Illegal given domain name: " + expectedName, iae);
         }
 
-        final Collection<List<?>> subjAltNames = cert.getSubjectAlternativeNames();
+        Collection<List<?>> subjAltNames = cert.getSubjectAlternativeNames();
         if (subjAltNames != null) {
             boolean foundDNS = false;
-            for (final List<?> next : subjAltNames) {
+            for ( List<?> next : subjAltNames) {
                 if (((Integer)next.get(0)).intValue() == ALTNAME_DNS) {
                     foundDNS = true;
-                    final String dnsName = (String)next.get(1);
-                    if (isMatched(expectedName, dnsName, chainsToPublicCA)) {
+                    String dnsName = (String)next.get(1);
+                    if (isMatched(expectedName, dnsName)) {
                         return;
                     }
                 }
@@ -231,20 +215,19 @@ public class HostnameChecker {
                         + "name matching " + expectedName + " found.");
             }
         }
-        final X500Name subjectName = getSubjectX500Name(cert);
-        final DerValue derValue = subjectName.findMostSpecificAttribute
+        X500Name subjectName = getSubjectX500Name(cert);
+        DerValue derValue = subjectName.findMostSpecificAttribute
                                                     (X500Name.commonName_oid);
         if (derValue != null) {
             try {
-                if (isMatched(expectedName, derValue.getAsString(),
-                              chainsToPublicCA)) {
+                if (isMatched(expectedName, derValue.getAsString())) {
                     return;
                 }
-            } catch (final IOException e) {
+            } catch (IOException e) {
                 // ignore
             }
         }
-        final String msg = "No name matching " + expectedName + " found";
+        String msg = "No name matching " + expectedName + " found";
         throw new CertificateException(msg);
     }
 
@@ -256,17 +239,17 @@ public class HostnameChecker {
      *
      * This method is currently used from within JSSE, do not remove.
      */
-    public static X500Name getSubjectX500Name(final X509Certificate cert)
+    public static X500Name getSubjectX500Name(X509Certificate cert)
             throws CertificateParsingException {
         try {
-            final Principal subjectDN = cert.getSubjectDN();
+            Principal subjectDN = cert.getSubjectDN();
             if (subjectDN instanceof X500Name) {
                 return (X500Name)subjectDN;
             } else {
-                final X500Principal subjectX500 = cert.getSubjectX500Principal();
+                X500Principal subjectX500 = cert.getSubjectX500Principal();
                 return new X500Name(subjectX500.getEncoded());
             }
-        } catch (final IOException e) {
+        } catch (IOException e) {
             throw(CertificateParsingException)
                 new CertificateParsingException().initCause(e);
         }
@@ -283,20 +266,15 @@ public class HostnameChecker {
      * The <code>template</code> parameter
      * may contain the wildcard character *
      */
-    private boolean isMatched(final String name, final String template,
-                              final boolean chainsToPublicCA) {
-        if (hasIllegalWildcard(name, template, chainsToPublicCA)) {
-            return false;
-        }
-
+    private boolean isMatched(String name, String template) {
         // check the validity of the domain name template.
         try {
             // Replacing wildcard character '*' with 'x' so as to check
             // the domain name template validity.
             //
             // Using the checking implemented in SNIHostName
-            final SNIHostName sni = new SNIHostName(template.replace('*', 'x'));
-        } catch (final IllegalArgumentException iae) {
+            SNIHostName sni = new SNIHostName(template.replace('*', 'x'));
+        } catch (IllegalArgumentException iae) {
             // It would be nice to add debug log if not matching.
             return false;
         }
@@ -310,61 +288,6 @@ public class HostnameChecker {
         }
     }
 
-    /**
-     * Returns true if the template contains an illegal wildcard character.
-     */
-    private static boolean hasIllegalWildcard(final String domain, final String template,
-                                              final boolean chainsToPublicCA) {
-        // not ok if it is a single wildcard character or "*."
-        if (template.equals("*") || template.equals("*.")) {
-            if (debug != null) {
-                debug.println("Certificate domain name has illegal single " +
-                              "wildcard character: " + template);
-            }
-            return true;
-        }
-
-        final int lastWildcardIndex = template.lastIndexOf("*");
-
-        // ok if it has no wildcard character
-        if (lastWildcardIndex == -1) {
-            return false;
-        }
-
-        final String afterWildcard = template.substring(lastWildcardIndex);
-        final int firstDotIndex = afterWildcard.indexOf(".");
-
-        // not ok if there is no dot after wildcard (ex: "*com")
-        if (firstDotIndex == -1) {
-            if (debug != null) {
-                debug.println("Certificate domain name has illegal wildcard, " +
-                              "no dot after wildcard character: " + template);
-            }
-            return true;
-        }
-
-        // If the wildcarded domain is a top-level domain under which names
-        // can be registered, then a wildcard is not allowed.
-
-        if (!chainsToPublicCA) {
-            return false; // skip check for non-public certificates
-        }
-        final Optional<RegisteredDomain> rd = RegisteredDomain.from(domain)
-                .filter(d -> d.type() == RegisteredDomain.Type.ICANN);
-
-        if (rd.isPresent()) {
-            final String wDomain = afterWildcard.substring(firstDotIndex + 1);
-            if (rd.get().publicSuffix().equalsIgnoreCase(wDomain)) {
-                if (debug != null) {
-                    debug.println("Certificate domain name has illegal " +
-                                  "wildcard for public suffix: " + template);
-                }
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     /**
      * Returns true if name matches against template.<p>
@@ -380,8 +303,8 @@ public class HostnameChecker {
          String template) {
         name = name.toLowerCase(Locale.ENGLISH);
         template = template.toLowerCase(Locale.ENGLISH);
-        final StringTokenizer nameSt = new StringTokenizer(name, ".");
-        final StringTokenizer templateSt = new StringTokenizer(template, ".");
+        StringTokenizer nameSt = new StringTokenizer(name, ".");
+        StringTokenizer templateSt = new StringTokenizer(template, ".");
 
         if (nameSt.countTokens() != templateSt.countTokens()) {
             return false;
@@ -411,7 +334,7 @@ public class HostnameChecker {
         name = name.toLowerCase(Locale.ENGLISH);
         template = template.toLowerCase(Locale.ENGLISH);
 
-        // Retrieve leftmost component
+        // Retreive leftmost component
         int templateIdx = template.indexOf(".");
         int nameIdx = name.indexOf(".");
 
@@ -436,7 +359,7 @@ public class HostnameChecker {
      * Returns true if the name matches against the template that may
      * contain wildcard char * <p>
      */
-    private static boolean matchWildCards(String name, final String template) {
+    private static boolean matchWildCards(String name, String template) {
 
         int wildcardIdx = template.indexOf("*");
         if (wildcardIdx == -1)
@@ -452,7 +375,7 @@ public class HostnameChecker {
             beforeWildcard = afterWildcard.substring(0, wildcardIdx);
             afterWildcard = afterWildcard.substring(wildcardIdx + 1);
 
-            final int beforeStartIdx = name.indexOf(beforeWildcard);
+            int beforeStartIdx = name.indexOf(beforeWildcard);
             if ((beforeStartIdx == -1) ||
                         (isBeginning && beforeStartIdx != 0)) {
                 return false;

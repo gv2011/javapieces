@@ -47,35 +47,35 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
     boolean allowBER = true;
 
     // used by sun/security/util/DerInputBuffer/DerInputBufferEqualsHashCode.java
-    DerInputBuffer(final byte[] buf) {
+    DerInputBuffer(byte[] buf) {
         this(buf, true);
     }
 
-    DerInputBuffer(final byte[] buf, final boolean allowBER) {
+    DerInputBuffer(byte[] buf, boolean allowBER) {
         super(buf);
         this.allowBER = allowBER;
     }
 
-    DerInputBuffer(final byte[] buf, final int offset, final int len, final boolean allowBER) {
+    DerInputBuffer(byte[] buf, int offset, int len, boolean allowBER) {
         super(buf, offset, len);
         this.allowBER = allowBER;
     }
 
     DerInputBuffer dup() {
         try {
-            final DerInputBuffer retval = (DerInputBuffer)clone();
+            DerInputBuffer retval = (DerInputBuffer)clone();
             retval.mark(Integer.MAX_VALUE);
             return retval;
-        } catch (final CloneNotSupportedException e) {
+        } catch (CloneNotSupportedException e) {
             throw new IllegalArgumentException(e.toString());
         }
     }
 
     byte[] toByteArray() {
-        final int     len = available();
+        int     len = available();
         if (len <= 0)
             return null;
-        final byte[]  retval = new byte[len];
+        byte[]  retval = new byte[len];
 
         System.arraycopy(buf, pos, retval, 0, len);
         return retval;
@@ -92,23 +92,22 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
      * Compares this DerInputBuffer for equality with the specified
      * object.
      */
-    @Override
-    public boolean equals(final Object other) {
+    public boolean equals(Object other) {
         if (other instanceof DerInputBuffer)
             return equals((DerInputBuffer)other);
         else
             return false;
     }
 
-    boolean equals(final DerInputBuffer other) {
+    boolean equals(DerInputBuffer other) {
         if (this == other)
             return true;
 
-        final int max = available();
+        int max = this.available();
         if (other.available() != max)
             return false;
         for (int i = 0; i < max; i++) {
-            if (buf[pos + i] != other.buf[other.pos + i]) {
+            if (this.buf[this.pos + i] != other.buf[other.pos + i]) {
                 return false;
             }
         }
@@ -120,19 +119,18 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
      *
      * @return a hashcode for this DerInputBuffer.
      */
-    @Override
     public int hashCode() {
         int retval = 0;
 
-        final int len = available();
-        final int p = pos;
+        int len = available();
+        int p = pos;
 
         for (int i = 0; i < len; i++)
             retval += buf[p + i] * i;
         return retval;
     }
 
-    void truncate(final int len) throws IOException {
+    void truncate(int len) throws IOException {
         if (len > available())
             throw new IOException("insufficient data");
         count = pos + len;
@@ -146,7 +144,7 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
      *   irrespective of actual encoding
      * @return the integer as a BigInteger.
      */
-    BigInteger getBigInteger(final int len, final boolean makePositive) throws IOException {
+    BigInteger getBigInteger(int len, boolean makePositive) throws IOException {
         if (len > available())
             throw new IOException("short read of integer");
 
@@ -154,7 +152,7 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
             throw new IOException("Invalid encoding: zero length Int value");
         }
 
-        final byte[] bytes = new byte[len];
+        byte[] bytes = new byte[len];
 
         System.arraycopy(buf, pos, bytes, 0, len);
         skip(len);
@@ -180,9 +178,9 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
      * @param len the number of bytes to use.
      * @return the integer.
      */
-    public int getInteger(final int len) throws IOException {
+    public int getInteger(int len) throws IOException {
 
-        final BigInteger result = getBigInteger(len, false);
+        BigInteger result = getBigInteger(len, false);
         if (result.compareTo(BigInteger.valueOf(Integer.MIN_VALUE)) < 0) {
             throw new IOException("Integer below minimum valid value");
         }
@@ -196,7 +194,7 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
      * Returns the bit string which takes up the specified
      * number of bytes in this buffer.
      */
-    public byte[] getBitString(final int len) throws IOException {
+    public byte[] getBitString(int len) throws IOException {
         if (len > available())
             throw new IOException("short read of bit string");
 
@@ -204,12 +202,12 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
             throw new IOException("Invalid encoding: zero length bit string");
         }
 
-        final int numOfPadBits = buf[pos];
+        int numOfPadBits = buf[pos];
         if ((numOfPadBits < 0) || (numOfPadBits > 7)) {
             throw new IOException("Invalid number of padding bits");
         }
         // minus the first byte which indicates the number of padding bits
-        final byte[] retval = new byte[len - 1];
+        byte[] retval = new byte[len - 1];
         System.arraycopy(buf, pos + 1, retval, 0, len - 1);
         if (numOfPadBits != 0) {
             // get rid of the padding bits
@@ -237,18 +235,18 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
          * Just copy the data into an aligned, padded octet buffer,
          * and consume the rest of the buffer.
          */
-        final int len = available();
-        final int unusedBits = buf[pos] & 0xff;
+        int len = available();
+        int unusedBits = buf[pos] & 0xff;
         if (unusedBits > 7 ) {
             throw new IOException("Invalid value for unused bits: " + unusedBits);
         }
-        final byte[] bits = new byte[len - 1];
+        byte[] bits = new byte[len - 1];
         // number of valid bits
-        final int length = (bits.length == 0) ? 0 : bits.length * 8 - unusedBits;
+        int length = (bits.length == 0) ? 0 : bits.length * 8 - unusedBits;
 
         System.arraycopy(buf, pos + 1, bits, 0, len - 1);
 
-        final BitArray bitArray = new BitArray(length, bits);
+        BitArray bitArray = new BitArray(length, bits);
         pos = count;
         return bitArray;
     }
@@ -258,7 +256,7 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
      * of bytes in this buffer.
      * @param len the number of bytes to use
      */
-    public Date getUTCTime(final int len) throws IOException {
+    public Date getUTCTime(int len) throws IOException {
         if (len > available())
             throw new IOException("short read of DER UTC Time");
 
@@ -273,7 +271,7 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
      * number of bytes in this buffer.
      * @param len the number of bytes to use
      */
-    public Date getGeneralizedTime(final int len) throws IOException {
+    public Date getGeneralizedTime(int len) throws IOException {
         if (len > available())
             throw new IOException("short read of DER Generalized Time");
 
@@ -290,7 +288,7 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
      * @param generalized true if Generalized Time is to be read, false
      * if UTC Time is to be read.
      */
-    private Date getTime(int len, final boolean generalized) throws IOException {
+    private Date getTime(int len, boolean generalized) throws IOException {
 
         /*
          * UTC time encoded as ASCII chars:
@@ -302,7 +300,7 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
          *       YYMMDDhhmmss-hhmm
          * UTC Time is broken in storing only two digits of year.
          * If YY < 50, we assume 20YY;
-         * if YY >= 50, we assume 19YY, as per RFC 5280.
+         * if YY >= 50, we assume 19YY, as per RFC 3280.
          *
          * Generalized time has a four-digit year and allows any
          * precision specified in ISO 8601. However, for our purposes,
@@ -400,8 +398,8 @@ class DerInputBuffer extends ByteArrayInputStream implements Cloneable {
          * Generalized time can theoretically allow any precision,
          * but we're not supporting that.
          */
-        final CalendarSystem gcal = CalendarSystem.getGregorianCalendar();
-        final CalendarDate date = gcal.newCalendarDate(null); // no time zone
+        CalendarSystem gcal = CalendarSystem.getGregorianCalendar();
+        CalendarDate date = gcal.newCalendarDate(null); // no time zone
         date.setDate(year, month, day);
         date.setTimeOfDay(hour, minute, second, millis);
         long time = gcal.getTime(date);

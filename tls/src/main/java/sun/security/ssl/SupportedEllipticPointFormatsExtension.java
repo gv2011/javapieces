@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,23 +31,24 @@ import java.util.List;
 
 import javax.net.ssl.SSLProtocolException;
 
-final class EllipticPointFormatsExtension extends HelloExtension {
+final class SupportedEllipticPointFormatsExtension extends HelloExtension {
 
-    static final int FMT_UNCOMPRESSED = 0;
-    static final int FMT_ANSIX962_COMPRESSED_PRIME = 1;
-    static final int FMT_ANSIX962_COMPRESSED_CHAR2 = 2;
+    final static int FMT_UNCOMPRESSED = 0;
+    final static int FMT_ANSIX962_COMPRESSED_PRIME = 1;
+    final static int FMT_ANSIX962_COMPRESSED_CHAR2 = 2;
 
     static final HelloExtension DEFAULT =
-            new EllipticPointFormatsExtension(new byte[] {FMT_UNCOMPRESSED});
+        new SupportedEllipticPointFormatsExtension(
+            new byte[] {FMT_UNCOMPRESSED});
 
     private final byte[] formats;
 
-    private EllipticPointFormatsExtension(byte[] formats) {
+    private SupportedEllipticPointFormatsExtension(byte[] formats) {
         super(ExtensionType.EXT_EC_POINT_FORMATS);
         this.formats = formats;
     }
 
-    EllipticPointFormatsExtension(HandshakeInStream s, int len)
+    SupportedEllipticPointFormatsExtension(HandshakeInStream s, int len)
             throws IOException {
         super(ExtensionType.EXT_EC_POINT_FORMATS);
         formats = s.getBytes8();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2010, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,10 +26,8 @@
 package sun.security.ssl;
 
 import java.io.PrintStream;
+import java.security.AccessController;
 import java.util.Locale;
-
-import sun.security.util.HexDumpEncoder;
-import java.nio.ByteBuffer;
 
 import sun.security.action.GetPropertyAction;
 
@@ -45,7 +43,8 @@ public class Debug {
     private static String args;
 
     static {
-        args = GetPropertyAction.privilegedGetProperty("javax.net.debug", "");
+        args = java.security.AccessController.doPrivileged(
+            new GetPropertyAction("javax.net.debug", ""));
         args = args.toLowerCase(Locale.ENGLISH);
         if (args.equals("help")) {
             Help();
@@ -145,13 +144,6 @@ public class Debug {
     }
 
     /**
-     * Print a message to stdout.
-     */
-    static void log(String message) {
-        System.out.println(Thread.currentThread().getName() + ": " + message);
-    }
-
-    /**
      * print a blank line to stderr that is prefixed with the prefix.
      */
 
@@ -163,6 +155,7 @@ public class Debug {
     /**
      * print a message to stderr that is prefixed with the prefix.
      */
+
     public static void println(String prefix, String message)
     {
         System.err.println(prefix + ": "+message);
@@ -184,11 +177,12 @@ public class Debug {
     /**
      * Return the value of the boolean System property propName.
      *
-     * Note use of privileged action. Do NOT make accessible to applications.
+     * Note use of doPrivileged(). Do make accessible to applications.
      */
     static boolean getBooleanProperty(String propName, boolean defaultValue) {
         // if set, require value of either true or false
-        String b = GetPropertyAction.privilegedGetProperty(propName);
+        String b = AccessController.doPrivileged(
+                new GetPropertyAction(propName));
         if (b == null) {
             return defaultValue;
         } else if (b.equalsIgnoreCase("false")) {
@@ -203,48 +197,5 @@ public class Debug {
 
     static String toString(byte[] b) {
         return sun.security.util.Debug.toString(b);
-    }
-
-    static void printHex(String prefix, byte[] bytes) {
-        HexDumpEncoder dump = new HexDumpEncoder();
-
-        synchronized (System.out) {
-            System.out.println(prefix);
-            try {
-                dump.encodeBuffer(bytes, System.out);
-            } catch (Exception e) {
-                // ignore
-            }
-            System.out.flush();
-        }
-    }
-
-    static void printHex(String prefix, ByteBuffer bb) {
-        HexDumpEncoder dump = new HexDumpEncoder();
-
-        synchronized (System.out) {
-            System.out.println(prefix);
-            try {
-                dump.encodeBuffer(bb.slice(), System.out);
-            } catch (Exception e) {
-                // ignore
-            }
-            System.out.flush();
-        }
-    }
-
-    static void printHex(String prefix, byte[] bytes, int offset, int length) {
-        HexDumpEncoder dump = new HexDumpEncoder();
-
-        synchronized (System.out) {
-            System.out.println(prefix);
-            try {
-                ByteBuffer bb = ByteBuffer.wrap(bytes, offset, length);
-                dump.encodeBuffer(bb, System.out);
-            } catch (Exception e) {
-                // ignore
-            }
-            System.out.flush();
-        }
     }
 }

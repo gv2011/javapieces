@@ -37,7 +37,7 @@ public class ManifestDigester {
     public static final String MF_MAIN_ATTRS = "Manifest-Main-Attributes";
 
     /** the raw bytes of the manifest */
-    private byte[] rawBytes;
+    private byte rawBytes[];
 
     /** the offset/length pair for a section */
     private HashMap<String, Entry> entries; // key is a UTF-8 string
@@ -59,7 +59,7 @@ public class ManifestDigester {
      *
      * @pos set by
      *
-     * @return false if end of bytes has been reached, otherwise returns
+     * @returns false if end of bytes has been reached, otherwise returns
      *          true
      */
     @SuppressWarnings("fallthrough")
@@ -107,10 +107,10 @@ public class ManifestDigester {
         return false;
     }
 
-    public ManifestDigester(byte[] bytes)
+    public ManifestDigester(byte bytes[])
     {
         rawBytes = bytes;
-        entries = new HashMap<>();
+        entries = new HashMap<String, Entry>();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -181,7 +181,7 @@ public class ManifestDigester {
         }
     }
 
-    private boolean isNameAttr(byte[] bytes, int start)
+    private boolean isNameAttr(byte bytes[], int start)
     {
         return ((bytes[start] == 'N') || (bytes[start] == 'n')) &&
                ((bytes[start+1] == 'a') || (bytes[start+1] == 'A')) &&
@@ -261,10 +261,11 @@ public class ManifestDigester {
         return e;
     }
 
-    public byte[] manifestDigest(MessageDigest md) {
-        md.reset();
-        md.update(rawBytes, 0, rawBytes.length);
-        return md.digest();
-    }
+    public byte[] manifestDigest(MessageDigest md)
+        {
+            md.reset();
+            md.update(rawBytes, 0, rawBytes.length);
+            return md.digest();
+        }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -49,8 +49,6 @@ import sun.security.internal.spec.TlsPrfParameterSpec;
 import sun.security.ssl.CipherSuite.*;
 import static sun.security.ssl.CipherSuite.PRF.*;
 import sun.security.util.KeyUtil;
-import sun.security.util.MessageDigestSpi2;
-import sun.security.provider.certpath.OCSPResponse;
 
 /**
  * Many data structures are involved in the handshake messages.  These
@@ -75,43 +73,24 @@ import sun.security.provider.certpath.OCSPResponse;
  */
 public abstract class HandshakeMessage {
 
-    /* Class and subclass dynamic debugging support */
-    public static final Debug debug = Debug.getInstance("ssl");
+    HandshakeMessage() { }
 
     // enum HandshakeType:
-    static final byte   ht_hello_request          = 0;      // RFC 5246
-    static final byte   ht_client_hello           = 1;      // RFC 5246
-    static final byte   ht_server_hello           = 2;      // RFC 5246
-    static final byte   ht_hello_verify_request   = 3;      // RFC 6347
-    static final byte   ht_new_session_ticket     = 4;      // RFC 4507
+    static final byte   ht_hello_request = 0;
+    static final byte   ht_client_hello = 1;
+    static final byte   ht_server_hello = 2;
 
-    static final byte   ht_certificate            = 11;     // RFC 5246
-    static final byte   ht_server_key_exchange    = 12;     // RFC 5246
-    static final byte   ht_certificate_request    = 13;     // RFC 5246
-    static final byte   ht_server_hello_done      = 14;     // RFC 5246
-    static final byte   ht_certificate_verify     = 15;     // RFC 5246
-    static final byte   ht_client_key_exchange    = 16;     // RFC 5246
+    static final byte   ht_certificate = 11;
+    static final byte   ht_server_key_exchange = 12;
+    static final byte   ht_certificate_request = 13;
+    static final byte   ht_server_hello_done = 14;
+    static final byte   ht_certificate_verify = 15;
+    static final byte   ht_client_key_exchange = 16;
 
-    static final byte   ht_finished               = 20;     // RFC 5246
-    static final byte   ht_certificate_url        = 21;     // RFC 6066
-    static final byte   ht_certificate_status     = 22;     // RFC 6066
-    static final byte   ht_supplemental_data      = 23;     // RFC 4680
+    static final byte   ht_finished = 20;
 
-    static final byte   ht_not_applicable         = -1;     // N/A
-
-    /*
-     * SSL 3.0 MAC padding constants.
-     * Also used by CertificateVerify and Finished during the handshake.
-     */
-    static final byte[] MD5_pad1 = genPad(0x36, 48);
-    static final byte[] MD5_pad2 = genPad(0x5c, 48);
-
-    static final byte[] SHA_pad1 = genPad(0x36, 40);
-    static final byte[] SHA_pad2 = genPad(0x5c, 40);
-
-    // default constructor
-    HandshakeMessage() {
-    }
+    /* Class and subclass dynamic debugging support */
+    public static final Debug debug = Debug.getInstance("ssl");
 
     /**
      * Utility method to convert a BigInteger to a byte array in unsigned
@@ -129,6 +108,16 @@ public abstract class HandshakeMessage {
         }
         return b;
     }
+
+    /*
+     * SSL 3.0 MAC padding constants.
+     * Also used by CertificateVerify and Finished during the handshake.
+     */
+    static final byte[] MD5_pad1 = genPad(0x36, 48);
+    static final byte[] MD5_pad2 = genPad(0x5c, 48);
+
+    static final byte[] SHA_pad1 = genPad(0x36, 40);
+    static final byte[] SHA_pad2 = genPad(0x5c, 40);
 
     private static byte[] genPad(int b, int count) {
         byte[] padding = new byte[count];
@@ -152,7 +141,6 @@ public abstract class HandshakeMessage {
         s.write(messageType());
         s.putInt24(len);
         send(s);
-        s.complete();
     }
 
     /*
@@ -211,69 +199,6 @@ static final class HelloRequest extends HandshakeMessage {
 
 }
 
-/*
- * HelloVerifyRequest ... SERVER --> CLIENT  [DTLS only]
- *
- * The definition of HelloVerifyRequest is as follows:
- *
- *     struct {
- *       ProtocolVersion server_version;
- *       opaque cookie<0..2^8-1>;
- *     } HelloVerifyRequest;
- *
- * For DTLS protocols, once the client has transmitted the ClientHello message,
- * it expects to see a HelloVerifyRequest from the server.  However, if the
- * server's message is lost, the client knows that either the ClientHello or
- * the HelloVerifyRequest has been lost and retransmits. [RFC 6347]
- */
-static final class HelloVerifyRequest extends HandshakeMessage {
-    ProtocolVersion     protocolVersion;
-    byte[]              cookie;         // 1 to 2^8 - 1 bytes
-
-    HelloVerifyRequest(HelloCookieManager helloCookieManager,
-            ClientHello clientHelloMsg) {
-
-        this.protocolVersion = clientHelloMsg.protocolVersion;
-        this.cookie = helloCookieManager.getCookie(clientHelloMsg);
-    }
-
-    HelloVerifyRequest(
-            HandshakeInStream input, int messageLength) throws IOException {
-
-        this.protocolVersion =
-                ProtocolVersion.valueOf(input.getInt8(), input.getInt8());
-        this.cookie = input.getBytes8();
-
-        // Is it a valid cookie?
-        HelloCookieManager.checkCookie(protocolVersion, cookie);
-    }
-
-    @Override
-    int messageType() {
-        return ht_hello_verify_request;
-    }
-
-    @Override
-    int messageLength() {
-        return 2 + cookie.length;       // 2: the length of protocolVersion
-    }
-
-    @Override
-    void send(HandshakeOutStream hos) throws IOException {
-        hos.putInt8(protocolVersion.major);
-        hos.putInt8(protocolVersion.minor);
-        hos.putBytes8(cookie);
-    }
-
-    @Override
-    void print(PrintStream out) throws IOException {
-        out.println("*** HelloVerifyRequest");
-        if (debug != null && Debug.isOn("verbose")) {
-            out.println("server_version: " + protocolVersion);
-            Debug.println(out, "cookie", cookie);
-        }
-    }
-}
 
 /*
  * ClientHello ... CLIENT --> SERVER
@@ -288,51 +213,32 @@ static final class HelloVerifyRequest extends HandshakeMessage {
  */
 static final class ClientHello extends HandshakeMessage {
 
-    ProtocolVersion             protocolVersion;
-    RandomCookie                clnt_random;
-    SessionId                   sessionId;
-    byte[]                      cookie;                     // DTLS only
-    private CipherSuiteList     cipherSuites;
-    private final boolean       isDTLS;
-    byte[]                      compression_methods;
+    ProtocolVersion     protocolVersion;
+    RandomCookie        clnt_random;
+    SessionId           sessionId;
+    private CipherSuiteList    cipherSuites;
+    byte[]              compression_methods;
 
     HelloExtensions extensions = new HelloExtensions();
 
-    private static final byte[]  NULL_COMPRESSION = new byte[] {0};
+    private final static byte[]  NULL_COMPRESSION = new byte[] {0};
 
     ClientHello(SecureRandom generator, ProtocolVersion protocolVersion,
-            SessionId sessionId, CipherSuiteList cipherSuites,
-            boolean isDTLS) {
+            SessionId sessionId, CipherSuiteList cipherSuites) {
 
-        this.isDTLS = isDTLS;
         this.protocolVersion = protocolVersion;
         this.sessionId = sessionId;
         this.cipherSuites = cipherSuites;
-        if (isDTLS) {
-            this.cookie = new byte[0];
-        } else {
-            this.cookie = null;
-        }
 
         clnt_random = new RandomCookie(generator);
         compression_methods = NULL_COMPRESSION;
     }
 
-    ClientHello(HandshakeInStream s,
-            int messageLength, boolean isDTLS) throws IOException {
-
-        this.isDTLS = isDTLS;
-
+    ClientHello(HandshakeInStream s, int messageLength) throws IOException {
         protocolVersion = ProtocolVersion.valueOf(s.getInt8(), s.getInt8());
         clnt_random = new RandomCookie(s);
         sessionId = new SessionId(s.getBytes8());
         sessionId.checkLength(protocolVersion);
-        if (isDTLS) {
-            cookie = s.getBytes8();
-        } else {
-            cookie = null;
-        }
-
         cipherSuites = new CipherSuiteList(s);
         compression_methods = s.getBytes8();
         if (messageLength() != messageLength) {
@@ -368,51 +274,6 @@ static final class ClientHello extends HandshakeMessage {
         extensions.add(signatureAlgorithm);
     }
 
-    void addMFLExtension(int maximumPacketSize) {
-        HelloExtension maxFragmentLength =
-                new MaxFragmentLengthExtension(maximumPacketSize);
-        extensions.add(maxFragmentLength);
-    }
-
-    void updateHelloCookie(MessageDigest cookieDigest) {
-        //
-        // Just use HandshakeOutStream to compute the hello verify cookie.
-        // Not actually used to output handshake message records.
-        //
-        HandshakeOutStream hos = new HandshakeOutStream(null);
-
-        try {
-            send(hos, false);    // Do not count hello verify cookie.
-        } catch (IOException ioe) {
-            // unlikely to happen
-        }
-
-        cookieDigest.update(hos.toByteArray());
-    }
-
-    // Add status_request extension type
-    void addCertStatusRequestExtension() {
-        extensions.add(new CertStatusReqExtension(StatusRequestType.OCSP,
-                new OCSPStatusRequest()));
-    }
-
-    // Add status_request_v2 extension type
-    void addCertStatusReqListV2Extension() {
-        // Create a default OCSPStatusRequest that we can use for both
-        // OCSP_MULTI and OCSP request list items.
-        OCSPStatusRequest osr = new OCSPStatusRequest();
-        List<CertStatusReqItemV2> itemList = new ArrayList<>(2);
-        itemList.add(new CertStatusReqItemV2(StatusRequestType.OCSP_MULTI,
-                osr));
-        itemList.add(new CertStatusReqItemV2(StatusRequestType.OCSP, osr));
-        extensions.add(new CertStatusReqListV2Extension(itemList));
-    }
-
-    // add application_layer_protocol_negotiation extension
-    void addALPNExtension(String[] applicationProtocols) throws SSLException {
-        extensions.add(new ALPNExtension(applicationProtocols));
-    }
-
     @Override
     int messageType() { return ht_client_hello; }
 
@@ -424,7 +285,6 @@ static final class ClientHello extends HandshakeMessage {
          */
         return (2 + 32 + 1 + 2 + 1
             + sessionId.length()                /* ... + variable parts */
-            + (isDTLS ? (1 + cookie.length) : 0)
             + (cipherSuites.size() * 2)
             + compression_methods.length)
             + extensions.length();
@@ -432,7 +292,13 @@ static final class ClientHello extends HandshakeMessage {
 
     @Override
     void send(HandshakeOutStream s) throws IOException {
-        send(s, true);  // Count hello verify cookie.
+        s.putInt8(protocolVersion.major);
+        s.putInt8(protocolVersion.minor);
+        clnt_random.send(s);
+        s.putBytes8(sessionId.getId());
+        cipherSuites.send(s);
+        s.putBytes8(compression_methods);
+        extensions.send(s);
     }
 
     @Override
@@ -446,10 +312,6 @@ static final class ClientHello extends HandshakeMessage {
             s.print("Session ID:  ");
             s.println(sessionId);
 
-            if (isDTLS) {
-                Debug.println(s, "cookie", cookie);
-            }
-
             s.println("Cipher Suites: " + cipherSuites);
 
             Debug.println(s, "Compression Methods", compression_methods);
@@ -457,21 +319,6 @@ static final class ClientHello extends HandshakeMessage {
             s.println("***");
         }
     }
-
-    private void send(HandshakeOutStream s,
-            boolean computeCookie) throws IOException {
-        s.putInt8(protocolVersion.major);
-        s.putInt8(protocolVersion.minor);
-        clnt_random.send(s);
-        s.putBytes8(sessionId.getId());
-        if (isDTLS && computeCookie) {
-            s.putBytes8(cookie);
-        }
-        cipherSuites.send(s);
-        s.putBytes8(compression_methods);
-        extensions.send(s);
-    }
-
 }
 
 /*
@@ -656,240 +503,6 @@ class CertificateMsg extends HandshakeMessage
 }
 
 /*
- * CertificateStatus ... SERVER --> CLIENT
- *
- * When a ClientHello asserting the status_request or status_request_v2
- * extensions is accepted by the server, it will fetch and return one
- * or more status responses in this handshake message.
- *
- * NOTE: Like the Certificate handshake message, this can potentially
- * be a very large message both due to the size of multiple status
- * responses and the certificate chains that are often attached to them.
- * Up to 2^24 bytes of status responses may be sent, possibly fragmented
- * over multiple TLS records.
- */
-static final class CertificateStatus extends HandshakeMessage
-{
-    private final StatusRequestType statusType;
-    private int encodedResponsesLen;
-    private int messageLength = -1;
-    private List<byte[]> encodedResponses;
-
-    @Override
-    int messageType() { return ht_certificate_status; }
-
-    /**
-     * Create a CertificateStatus message from the certificates and their
-     * respective OCSP responses
-     *
-     * @param type an indication of the type of response (OCSP or OCSP_MULTI)
-     * @param responses a {@code List} of OCSP responses in DER-encoded form.
-     *      For the OCSP type, only the first entry in the response list is
-     *      used, and must correspond to the end-entity certificate sent to the
-     *      peer.  Zero-length or null values for the response data are not
-     *      allowed for the OCSP type.  For the OCSP_MULTI type, each entry in
-     *      the list should match its corresponding certificate sent in the
-     *      Server Certificate message.  Where an OCSP response does not exist,
-     *      either a zero-length array or a null value should be used.
-     *
-     * @throws SSLException if an unsupported StatusRequestType or invalid
-     *      OCSP response data is provided.
-     */
-    CertificateStatus(StatusRequestType type, X509Certificate[] chain,
-            Map<X509Certificate, byte[]> responses) {
-        statusType = type;
-        encodedResponsesLen = 0;
-        encodedResponses = new ArrayList<>(chain.length);
-
-        Objects.requireNonNull(chain, "Null chain not allowed");
-        Objects.requireNonNull(responses, "Null responses not allowed");
-
-        if (statusType == StatusRequestType.OCSP) {
-            // Just get the response for the end-entity certificate
-            byte[] respDER = responses.get(chain[0]);
-            if (respDER != null && respDER.length > 0) {
-                encodedResponses.add(respDER);
-                encodedResponsesLen = 3 + respDER.length;
-            } else {
-                throw new IllegalArgumentException("Zero-length or null " +
-                        "OCSP Response");
-            }
-        } else if (statusType == StatusRequestType.OCSP_MULTI) {
-            for (X509Certificate cert : chain) {
-                byte[] respDER = responses.get(cert);
-                if (respDER != null) {
-                    encodedResponses.add(respDER);
-                    encodedResponsesLen += (respDER.length + 3);
-                } else {
-                    // If we cannot find a response for a given certificate
-                    // then use a zero-length placeholder.
-                    encodedResponses.add(new byte[0]);
-                    encodedResponsesLen += 3;
-                }
-            }
-        } else {
-            throw new IllegalArgumentException(
-                    "Unsupported StatusResponseType: " + statusType);
-        }
-    }
-
-    /**
-     * Decode the CertificateStatus handshake message coming from a
-     * {@code HandshakeInputStream}.
-     *
-     * @param input the {@code HandshakeInputStream} containing the
-     * CertificateStatus message bytes.
-     *
-     * @throws SSLHandshakeException if a zero-length response is found in the
-     * OCSP response type, or an unsupported response type is detected.
-     * @throws IOException if a decoding error occurs.
-     */
-    CertificateStatus(HandshakeInStream input) throws IOException {
-        encodedResponsesLen = 0;
-        encodedResponses = new ArrayList<>();
-
-        statusType = StatusRequestType.get(input.getInt8());
-        if (statusType == StatusRequestType.OCSP) {
-            byte[] respDER = input.getBytes24();
-            // Convert the incoming bytes to a OCSPResponse strucutre
-            if (respDER.length > 0) {
-                encodedResponses.add(respDER);
-                encodedResponsesLen = 3 + respDER.length;
-            } else {
-                throw new SSLHandshakeException("Zero-length OCSP Response");
-            }
-        } else if (statusType == StatusRequestType.OCSP_MULTI) {
-            int respListLen = input.getInt24();
-            encodedResponsesLen = respListLen;
-
-            // Add each OCSP reponse into the array list in the order
-            // we receive them off the wire.  A zero-length array is
-            // allowed for ocsp_multi, and means that a response for
-            // a given certificate is not available.
-            while (respListLen > 0) {
-                byte[] respDER = input.getBytes24();
-                encodedResponses.add(respDER);
-                respListLen -= (respDER.length + 3);
-            }
-
-            if (respListLen != 0) {
-                throw new SSLHandshakeException(
-                        "Bad OCSP response list length");
-            }
-        } else {
-            throw new SSLHandshakeException("Unsupported StatusResponseType: " +
-                    statusType);
-        }
-    }
-
-    /**
-     * Get the length of the CertificateStatus message.
-     *
-     * @return the length of the message in bytes.
-     */
-    @Override
-    int messageLength() {
-        int len = 1;            // Length + Status type
-
-        if (messageLength == -1) {
-            if (statusType == StatusRequestType.OCSP) {
-                len += encodedResponsesLen;
-            } else if (statusType == StatusRequestType.OCSP_MULTI) {
-                len += 3 + encodedResponsesLen;
-            }
-            messageLength = len;
-        }
-
-        return messageLength;
-    }
-
-    /**
-     * Encode the CertificateStatus handshake message and place it on a
-     * {@code HandshakeOutputStream}.
-     *
-     * @param s the HandshakeOutputStream that will the message bytes.
-     *
-     * @throws IOException if an encoding error occurs.
-     */
-    @Override
-    void send(HandshakeOutStream s) throws IOException {
-        s.putInt8(statusType.id);
-        if (statusType == StatusRequestType.OCSP) {
-            s.putBytes24(encodedResponses.get(0));
-        } else if (statusType == StatusRequestType.OCSP_MULTI) {
-            s.putInt24(encodedResponsesLen);
-            for (byte[] respBytes : encodedResponses) {
-                if (respBytes != null) {
-                    s.putBytes24(respBytes);
-                } else {
-                    s.putBytes24(null);
-                }
-            }
-        } else {
-            // It is highly unlikely that we will fall into this section of
-            // the code.
-            throw new SSLHandshakeException("Unsupported status_type: " +
-                    statusType.id);
-        }
-    }
-
-    /**
-     * Display a human-readable representation of the CertificateStatus message.
-     *
-     * @param s the PrintStream used to display the message data.
-     *
-     * @throws IOException if any errors occur while parsing the OCSP response
-     * bytes into a readable form.
-     */
-    @Override
-    void print(PrintStream s) throws IOException {
-        s.println("*** CertificateStatus");
-        if (debug != null && Debug.isOn("verbose")) {
-            s.println("Type: " + statusType);
-            if (statusType == StatusRequestType.OCSP) {
-                OCSPResponse oResp = new OCSPResponse(encodedResponses.get(0));
-                s.println(oResp);
-            } else if (statusType == StatusRequestType.OCSP_MULTI) {
-                int numResponses = encodedResponses.size();
-                s.println(numResponses +
-                        (numResponses == 1 ? " entry:" : " entries:"));
-                for (byte[] respDER : encodedResponses) {
-                    if (respDER.length > 0) {
-                        OCSPResponse oResp = new OCSPResponse(respDER);
-                        s.println(oResp);
-                    } else {
-                        s.println("<Zero-length entry>");
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Get the type of CertificateStatus message
-     *
-     * @return the {@code StatusRequestType} for this CertificateStatus
-     *      message.
-     */
-    StatusRequestType getType() {
-        return statusType;
-    }
-
-    /**
-     * Get the list of non-zero length OCSP responses.
-     * The responses returned in this list can be used to map to
-     * {@code X509Certificate} objects provided by the peer and
-     * provided to a {@code PKIXRevocationChecker}.
-     *
-     * @return an unmodifiable List of zero or more byte arrays, each one
-     *      consisting of a single status response.
-     */
-    List<byte[]> getResponses() {
-        return Collections.unmodifiableList(encodedResponses);
-    }
-}
-
-/*
  * ServerKeyExchange ... SERVER --> CLIENT
  *
  * The cipher suite selected, when combined with the certificate exchanged,
@@ -925,7 +538,7 @@ static final class CertificateStatus extends HandshakeMessage
  * exchange the premaster secret.  That's how RSA_EXPORT often works,
  * as well as how the DHE_* flavors work.
  */
-abstract static class ServerKeyExchange extends HandshakeMessage
+static abstract class ServerKeyExchange extends HandshakeMessage
 {
     @Override
     int messageType() { return ht_server_key_exchange; }
@@ -943,8 +556,8 @@ abstract static class ServerKeyExchange extends HandshakeMessage
 static final
 class RSA_ServerKeyExchange extends ServerKeyExchange
 {
-    private byte[] rsa_modulus;     // 1 to 2^16 - 1 bytes
-    private byte[] rsa_exponent;    // 1 to 2^16 - 1 bytes
+    private byte rsa_modulus[];     // 1 to 2^16 - 1 bytes
+    private byte rsa_exponent[];    // 1 to 2^16 - 1 bytes
 
     private Signature signature;
     private byte[] signatureBytes;
@@ -952,7 +565,7 @@ class RSA_ServerKeyExchange extends ServerKeyExchange
     /*
      * Hash the nonces and the ephemeral RSA public key.
      */
-    private void updateSignature(byte[] clntNonce, byte[] svrNonce)
+    private void updateSignature(byte clntNonce[], byte svrNonce[])
             throws SignatureException {
         int tmp;
 
@@ -1078,14 +691,14 @@ static final
 class DH_ServerKeyExchange extends ServerKeyExchange
 {
     // Fix message encoding, see 4348279
-    private static final boolean dhKeyExchangeFix =
+    private final static boolean dhKeyExchangeFix =
         Debug.getBooleanProperty("com.sun.net.ssl.dhKeyExchangeFix", true);
 
-    private byte[]                dh_p;        // 1 to 2^16 - 1 bytes
-    private byte[]                dh_g;        // 1 to 2^16 - 1 bytes
-    private byte[]                dh_Ys;       // 1 to 2^16 - 1 bytes
+    private byte                dh_p [];        // 1 to 2^16 - 1 bytes
+    private byte                dh_g [];        // 1 to 2^16 - 1 bytes
+    private byte                dh_Ys [];       // 1 to 2^16 - 1 bytes
 
-    private byte[]                signature;
+    private byte                signature [];
 
     // protocol version being established using this ServerKeyExchange message
     ProtocolVersion protocolVersion;
@@ -1111,8 +724,8 @@ class DH_ServerKeyExchange extends ServerKeyExchange
      * with the cert chain which was sent ... for DHE_DSS and DHE_RSA
      * key exchange.  (Constructor called by server.)
      */
-    DH_ServerKeyExchange(DHCrypt obj, PrivateKey key, byte[] clntNonce,
-            byte[] svrNonce, SecureRandom sr,
+    DH_ServerKeyExchange(DHCrypt obj, PrivateKey key, byte clntNonce[],
+            byte svrNonce[], SecureRandom sr,
             SignatureAndHashAlgorithm signAlgorithm,
             ProtocolVersion protocolVersion) throws GeneralSecurityException {
 
@@ -1122,7 +735,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
         setValues(obj);
 
         Signature sig;
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             this.preferableSignatureAlgorithm = signAlgorithm;
             sig = JsseJce.getSignature(signAlgorithm.getAlgorithmName());
         } else {
@@ -1167,7 +780,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
      * DHE_DSS or DHE_RSA key exchange.  (Called by client.)
      */
     DH_ServerKeyExchange(HandshakeInStream input, PublicKey publicKey,
-            byte[] clntNonce, byte[] svrNonce, int messageSize,
+            byte clntNonce[], byte svrNonce[], int messageSize,
             Collection<SignatureAndHashAlgorithm> localSupportedSignAlgs,
             ProtocolVersion protocolVersion)
             throws IOException, GeneralSecurityException {
@@ -1183,7 +796,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
                                              new BigInteger(1, dh_g)));
 
         // read the signature and hash algorithm
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             int hash = input.getInt8();         // hash algorithm
             int signature = input.getInt8();    // signature algorithm
 
@@ -1203,7 +816,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
         }
 
         // read the signature
-        byte[] signature;
+        byte signature[];
         if (dhKeyExchangeFix) {
             signature = input.getBytes16();
         } else {
@@ -1217,7 +830,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
 
         Signature sig;
         String algorithm = publicKey.getAlgorithm();
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             sig = JsseJce.getSignature(
                         preferableSignatureAlgorithm.getAlgorithmName());
         } else {
@@ -1260,8 +873,8 @@ class DH_ServerKeyExchange extends ServerKeyExchange
     /*
      * Update sig with nonces and Diffie-Hellman public key.
      */
-    private void updateSignature(Signature sig, byte[] clntNonce,
-            byte[] svrNonce) throws SignatureException {
+    private void updateSignature(Signature sig, byte clntNonce[],
+            byte svrNonce[]) throws SignatureException {
         int tmp;
 
         sig.update(clntNonce);
@@ -1298,7 +911,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
         temp += dh_Ys.length;
 
         if (signature != null) {
-            if (protocolVersion.useTLS12PlusSpec()) {
+            if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
                 temp += SignatureAndHashAlgorithm.sizeInRecord();
             }
 
@@ -1318,7 +931,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
         s.putBytes16(dh_Ys);
 
         if (signature != null) {
-            if (protocolVersion.useTLS12PlusSpec()) {
+            if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
                 s.putInt8(preferableSignatureAlgorithm.getHashValue());
                 s.putInt8(preferableSignatureAlgorithm.getSignatureValue());
             }
@@ -1343,7 +956,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
             if (signature == null) {
                 s.println("Anonymous");
             } else {
-                if (protocolVersion.useTLS12PlusSpec()) {
+                if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
                     s.println("Signature Algorithm " +
                         preferableSignatureAlgorithm.getAlgorithmName());
                 }
@@ -1365,9 +978,9 @@ static final
 class ECDH_ServerKeyExchange extends ServerKeyExchange {
 
     // constants for ECCurveType
-    private static final int CURVE_EXPLICIT_PRIME = 1;
-    private static final int CURVE_EXPLICIT_CHAR2 = 2;
-    private static final int CURVE_NAMED_CURVE    = 3;
+    private final static int CURVE_EXPLICIT_PRIME = 1;
+    private final static int CURVE_EXPLICIT_CHAR2 = 2;
+    private final static int CURVE_NAMED_CURVE    = 3;
 
     // id of the curve we are using
     private int curveId;
@@ -1397,7 +1010,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         ECParameterSpec params = publicKey.getParams();
         ECPoint point = publicKey.getW();
         pointBytes = JsseJce.encodePoint(point, params.getCurve());
-        curveId = EllipticCurvesExtension.getCurveIndex(params);
+        curveId = SupportedEllipticCurvesExtension.getCurveIndex(params);
 
         if (privateKey == null) {
             // ECDH_anon
@@ -1405,7 +1018,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         }
 
         Signature sig;
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             this.preferableSignatureAlgorithm = signAlgorithm;
             sig = JsseJce.getSignature(signAlgorithm.getAlgorithmName());
         } else {
@@ -1435,11 +1048,13 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         // the supported curves during the exchange of the Hello messages.
         if (curveType == CURVE_NAMED_CURVE) {
             curveId = input.getInt16();
-            if (!EllipticCurvesExtension.isSupported(curveId)) {
+            if (SupportedEllipticCurvesExtension.isSupported(curveId)
+                    == false) {
                 throw new SSLHandshakeException(
                     "Unsupported curveId: " + curveId);
             }
-            String curveOid = EllipticCurvesExtension.getCurveOid(curveId);
+            String curveOid =
+                SupportedEllipticCurvesExtension.getCurveOid(curveId);
             if (curveOid == null) {
                 throw new SSLHandshakeException(
                     "Unknown named curve: " + curveId);
@@ -1466,7 +1081,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         }
 
         // read the signature and hash algorithm
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             int hash = input.getInt8();         // hash algorithm
             int signature = input.getInt8();    // signature algorithm
 
@@ -1488,7 +1103,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
 
         // verify the signature
         Signature sig;
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             sig = JsseJce.getSignature(
                         preferableSignatureAlgorithm.getAlgorithmName());
         } else {
@@ -1524,8 +1139,8 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
             }
     }
 
-    private void updateSignature(Signature sig, byte[] clntNonce,
-            byte[] svrNonce) throws SignatureException {
+    private void updateSignature(Signature sig, byte clntNonce[],
+            byte svrNonce[]) throws SignatureException {
         sig.update(clntNonce);
         sig.update(svrNonce);
 
@@ -1541,7 +1156,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         int sigLen = 0;
         if (signatureBytes != null) {
             sigLen = 2 + signatureBytes.length;
-            if (protocolVersion.useTLS12PlusSpec()) {
+            if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
                 sigLen += SignatureAndHashAlgorithm.sizeInRecord();
             }
         }
@@ -1556,7 +1171,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         s.putBytes8(pointBytes);
 
         if (signatureBytes != null) {
-            if (protocolVersion.useTLS12PlusSpec()) {
+            if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
                 s.putInt8(preferableSignatureAlgorithm.getHashValue());
                 s.putInt8(preferableSignatureAlgorithm.getSignatureValue());
             }
@@ -1573,7 +1188,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
             if (signatureBytes == null) {
                 s.println("Anonymous");
             } else {
-                if (protocolVersion.useTLS12PlusSpec()) {
+                if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
                     s.println("Signature Algorithm " +
                             preferableSignatureAlgorithm.getAlgorithmName());
                 }
@@ -1590,7 +1205,7 @@ static final class DistinguishedName {
      * DER encoded distinguished name.
      * TLS requires that its not longer than 65535 bytes.
      */
-    byte[] name;
+    byte name[];
 
     DistinguishedName(HandshakeInStream input) throws IOException {
         name = input.getBytes16();
@@ -1663,12 +1278,12 @@ class CertificateRequest extends HandshakeMessage
     static final int    cct_rsa_fixed_ecdh   = 65;
     static final int    cct_ecdsa_fixed_ecdh = 66;
 
-    private static final byte[] TYPES_NO_ECC = { cct_rsa_sign, cct_dss_sign };
-    private static final byte[] TYPES_ECC =
+    private final static byte[] TYPES_NO_ECC = { cct_rsa_sign, cct_dss_sign };
+    private final static byte[] TYPES_ECC =
         { cct_rsa_sign, cct_dss_sign, cct_ecdsa_sign };
 
-    byte[]                types;               // 1 to 255 types
-    DistinguishedName[]   authorities;         // 3 to 2^16 - 1
+    byte                types [];               // 1 to 255 types
+    DistinguishedName   authorities [];         // 3 to 2^16 - 1
         // ... "3" because that's the smallest DER-encoded X500 DN
 
     // protocol version being established using this CertificateRequest message
@@ -1680,7 +1295,7 @@ class CertificateRequest extends HandshakeMessage
     // length of supported_signature_algorithms
     private int algorithmsLen;
 
-    CertificateRequest(X509Certificate[] ca, KeyExchange keyExchange,
+    CertificateRequest(X509Certificate ca[], KeyExchange keyExchange,
             Collection<SignatureAndHashAlgorithm> signAlgs,
             ProtocolVersion protocolVersion) throws IOException {
 
@@ -1699,7 +1314,7 @@ class CertificateRequest extends HandshakeMessage
         this.types = JsseJce.isEcAvailable() ? TYPES_ECC : TYPES_NO_ECC;
 
         // Use supported_signature_algorithms for TLS 1.2 or later.
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             if (signAlgs == null || signAlgs.isEmpty()) {
                 throw new SSLProtocolException(
                         "No supported signature algorithms");
@@ -1723,7 +1338,7 @@ class CertificateRequest extends HandshakeMessage
         types = input.getBytes8();
 
         // Read the supported_signature_algorithms for TLS 1.2 or later.
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             algorithmsLen = input.getInt16();
             if (algorithmsLen < 2) {
                 throw new SSLProtocolException(
@@ -1793,7 +1408,7 @@ class CertificateRequest extends HandshakeMessage
     int messageLength() {
         int len = 1 + types.length + 2;
 
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             len += algorithmsLen + 2;
         }
 
@@ -1810,7 +1425,7 @@ class CertificateRequest extends HandshakeMessage
         output.putBytes8(types);
 
         // put supported_signature_algorithms
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             output.putInt16(algorithmsLen);
             for (SignatureAndHashAlgorithm algorithm : algorithms) {
                 output.putInt8(algorithm.getHashValue());      // hash
@@ -1865,18 +1480,18 @@ class CertificateRequest extends HandshakeMessage
             }
             s.println();
 
-            if (protocolVersion.useTLS12PlusSpec()) {
-                StringBuilder sb = new StringBuilder();
+            if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
+                StringBuffer buffer = new StringBuffer();
                 boolean opened = false;
                 for (SignatureAndHashAlgorithm signAlg : algorithms) {
                     if (opened) {
-                        sb.append(", ").append(signAlg.getAlgorithmName());
+                        buffer.append(", " + signAlg.getAlgorithmName());
                     } else {
-                        sb.append(signAlg.getAlgorithmName());
+                        buffer.append(signAlg.getAlgorithmName());
                         opened = true;
                     }
                 }
-                s.println("Supported Signature Algorithms: " + sb);
+                s.println("Supported Signature Algorithms: " + buffer);
             }
 
             s.println("Cert Authorities:");
@@ -1963,7 +1578,7 @@ static final class CertificateVerify extends HandshakeMessage {
 
         String algorithm = privateKey.getAlgorithm();
         Signature sig = null;
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             this.preferableSignatureAlgorithm = signAlgorithm;
             sig = JsseJce.getSignature(signAlgorithm.getAlgorithmName());
         } else {
@@ -1985,7 +1600,7 @@ static final class CertificateVerify extends HandshakeMessage {
         this.protocolVersion = protocolVersion;
 
         // read the signature and hash algorithm
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             int hashAlg = input.getInt8();         // hash algorithm
             int signAlg = input.getInt8();         // signature algorithm
 
@@ -2021,7 +1636,7 @@ static final class CertificateVerify extends HandshakeMessage {
             SecretKey masterSecret) throws GeneralSecurityException {
         String algorithm = publicKey.getAlgorithm();
         Signature sig = null;
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             sig = JsseJce.getSignature(
                         preferableSignatureAlgorithm.getAlgorithmName());
         } else {
@@ -2063,11 +1678,11 @@ static final class CertificateVerify extends HandshakeMessage {
             throws SignatureException {
 
         if (algorithm.equals("RSA")) {
-            if (!protocolVersion.useTLS12PlusSpec()) {  // TLS1.1-
+            if (protocolVersion.v < ProtocolVersion.TLS12.v) { // TLS1.1-
                 MessageDigest md5Clone = handshakeHash.getMD5Clone();
                 MessageDigest shaClone = handshakeHash.getSHAClone();
 
-                if (!protocolVersion.useTLS10PlusSpec()) {  // SSLv3
+                if (protocolVersion.v < ProtocolVersion.TLS10.v) { // SSLv3
                     updateDigest(md5Clone, MD5_pad1, MD5_pad2, masterKey);
                     updateDigest(shaClone, SHA_pad1, SHA_pad2, masterKey);
                 }
@@ -2079,10 +1694,10 @@ static final class CertificateVerify extends HandshakeMessage {
                 sig.update(handshakeHash.getAllHandshakeMessages());
             }
         } else { // DSA, ECDSA
-            if (!protocolVersion.useTLS12PlusSpec()) {  // TLS1.1-
+            if (protocolVersion.v < ProtocolVersion.TLS12.v) { // TLS1.1-
                 MessageDigest shaClone = handshakeHash.getSHAClone();
 
-                if (!protocolVersion.useTLS10PlusSpec()) {  // SSLv3
+                if (protocolVersion.v < ProtocolVersion.TLS10.v) { // SSLv3
                     updateDigest(shaClone, SHA_pad1, SHA_pad2, masterKey);
                 }
 
@@ -2125,14 +1740,63 @@ static final class CertificateVerify extends HandshakeMessage {
         md.update(temp);
     }
 
+    private final static Class<?> delegate;
+    private final static Field spiField;
+
+    static {
+        try {
+            delegate = Class.forName("java.security.MessageDigest$Delegate");
+            spiField = delegate.getDeclaredField("digestSpi");
+        } catch (Exception e) {
+            throw new RuntimeException("Reflection failed", e);
+        }
+        makeAccessible(spiField);
+    }
+
+    private static void makeAccessible(final AccessibleObject o) {
+        AccessController.doPrivileged(new PrivilegedAction<Object>() {
+            @Override
+            public Object run() {
+                o.setAccessible(true);
+                return null;
+            }
+        });
+    }
+
+    // ConcurrentHashMap does not allow null values, use this marker object
+    private final static Object NULL_OBJECT = new Object();
+
+    // cache Method objects per Spi class
+    // Note that this will prevent the Spi classes from being GC'd. We assume
+    // that is not a problem.
+    private final static Map<Class<?>,Object> methodCache =
+                                        new ConcurrentHashMap<>();
+
     private static void digestKey(MessageDigest md, SecretKey key) {
         try {
-            if (md instanceof MessageDigestSpi2) {
-                ((MessageDigestSpi2)md).engineUpdate(key);
-            } else {
+            // Verify that md is implemented via MessageDigestSpi, not
+            // via JDK 1.1 style MessageDigest subclassing.
+            if (md.getClass() != delegate) {
+                throw new Exception("Digest is not a MessageDigestSpi");
+            }
+            MessageDigestSpi spi = (MessageDigestSpi)spiField.get(md);
+            Class<?> clazz = spi.getClass();
+            Object r = methodCache.get(clazz);
+            if (r == null) {
+                try {
+                    r = clazz.getDeclaredMethod("implUpdate", SecretKey.class);
+                    makeAccessible((Method)r);
+                } catch (NoSuchMethodException e) {
+                    r = NULL_OBJECT;
+                }
+                methodCache.put(clazz, r);
+            }
+            if (r == NULL_OBJECT) {
                 throw new Exception(
                     "Digest does not support implUpdate(SecretKey)");
             }
+            Method update = (Method)r;
+            update.invoke(spi, key);
         } catch (Exception e) {
             throw new RuntimeException(
                 "Could not obtain encoded key and "
@@ -2149,7 +1813,7 @@ static final class CertificateVerify extends HandshakeMessage {
     int messageLength() {
         int temp = 2;
 
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             temp += SignatureAndHashAlgorithm.sizeInRecord();
         }
 
@@ -2158,7 +1822,7 @@ static final class CertificateVerify extends HandshakeMessage {
 
     @Override
     void send(HandshakeOutStream s) throws IOException {
-        if (protocolVersion.useTLS12PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
             s.putInt8(preferableSignatureAlgorithm.getHashValue());
             s.putInt8(preferableSignatureAlgorithm.getSignatureValue());
         }
@@ -2171,7 +1835,7 @@ static final class CertificateVerify extends HandshakeMessage {
         s.println("*** CertificateVerify");
 
         if (debug != null && Debug.isOn("verbose")) {
-            if (protocolVersion.useTLS12PlusSpec()) {
+            if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
                 s.println("Signature Algorithm " +
                         preferableSignatureAlgorithm.getAlgorithmName());
             }
@@ -2198,10 +1862,10 @@ static final class CertificateVerify extends HandshakeMessage {
 static final class Finished extends HandshakeMessage {
 
     // constant for a Finished message sent by the client
-    static final int CLIENT = 1;
+    final static int CLIENT = 1;
 
     // constant for a Finished message sent by the server
-    static final int SERVER = 2;
+    final static int SERVER = 2;
 
     // enum Sender:  "CLNT" and "SRVR"
     private static final byte[] SSL_CLIENT = { 0x43, 0x4C, 0x4E, 0x54 };
@@ -2237,7 +1901,7 @@ static final class Finished extends HandshakeMessage {
             CipherSuite cipherSuite) throws IOException {
         this.protocolVersion = protocolVersion;
         this.cipherSuite = cipherSuite;
-        int msgLen = protocolVersion.useTLS10PlusSpec() ?  12 : 36;
+        int msgLen = (protocolVersion.v >= ProtocolVersion.TLS10.v) ? 12 : 36;
         verifyData = new byte[msgLen];
         input.read(verifyData);
     }
@@ -2270,22 +1934,22 @@ static final class Finished extends HandshakeMessage {
             throw new RuntimeException("Invalid sender: " + sender);
         }
 
-        if (protocolVersion.useTLS10PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS10.v) {
             // TLS 1.0+
             try {
-                byte[] seed;
+                byte [] seed;
                 String prfAlg;
                 PRF prf;
 
                 // Get the KeyGenerator alg and calculate the seed.
-                if (protocolVersion.useTLS12PlusSpec()) {
-                    // TLS 1.2+ or DTLS 1.2+
+                if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
+                    // TLS 1.2
                     seed = handshakeHash.getFinishedHash();
 
                     prfAlg = "SunTls12Prf";
                     prf = cipherSuite.prfAlg;
                 } else {
-                    // TLS 1.0/1.1, DTLS 1.0
+                    // TLS 1.0/1.1
                     MessageDigest md5Clone = handshakeHash.getMD5Clone();
                     MessageDigest shaClone = handshakeHash.getSHAClone();
                     seed = new byte[36];
@@ -2306,7 +1970,6 @@ static final class Finished extends HandshakeMessage {
                  * algorithm.  If we ever run across a different
                  * length, this call will need to be updated.
                  */
-                @SuppressWarnings("deprecation")
                 TlsPrfParameterSpec spec = new TlsPrfParameterSpec(
                     masterKey, tlsLabel, seed, 12,
                     prfHashAlg, prfHashLength, prfBlockSize);

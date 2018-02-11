@@ -77,9 +77,9 @@ public class ManifestEntryVerifier {
      */
     public ManifestEntryVerifier(Manifest man)
     {
-        createdDigests = new HashMap<>(11);
-        digests = new ArrayList<>();
-        manifestHashes = new ArrayList<>();
+        createdDigests = new HashMap<String, MessageDigest>(11);
+        digests = new ArrayList<MessageDigest>();
+        manifestHashes = new ArrayList<byte[]>();
         this.man = man;
     }
 
@@ -166,7 +166,7 @@ public class ManifestEntryVerifier {
     /**
      * update the digests for the digests we are interested in
      */
-    public void update(byte[] buffer, int off, int len) {
+    public void update(byte buffer[], int off, int len) {
         if (skip) return;
 
         for (int i=0; i < digests.size(); i++) {
@@ -243,7 +243,7 @@ public class ManifestEntryVerifier {
 
     static String toHex(byte[] data) {
 
-        StringBuilder sb = new StringBuilder(data.length*2);
+        StringBuffer sb = new StringBuffer(data.length*2);
 
         for (int i=0; i<data.length; i++) {
             sb.append(hexc[(data[i] >>4) & 0x0f]);

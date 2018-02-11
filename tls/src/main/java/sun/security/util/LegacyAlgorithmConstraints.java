@@ -37,7 +37,7 @@ import static sun.security.util.AbstractAlgorithmConstraints.getAlgorithms;
 public class LegacyAlgorithmConstraints extends AbstractAlgorithmConstraints {
 
     // the known security property, jdk.tls.legacyAlgorithms
-    public static final String PROPERTY_TLS_LEGACY_ALGS =
+    public final static String PROPERTY_TLS_LEGACY_ALGS =
             "jdk.tls.legacyAlgorithms";
 
     private final String[] legacyAlgorithms;
@@ -49,18 +49,18 @@ public class LegacyAlgorithmConstraints extends AbstractAlgorithmConstraints {
     }
 
     @Override
-    public final boolean permits(Set<CryptoPrimitive> primitives,
+    final public boolean permits(Set<CryptoPrimitive> primitives,
             String algorithm, AlgorithmParameters parameters) {
         return checkAlgorithm(legacyAlgorithms, algorithm, decomposer);
     }
 
     @Override
-    public final boolean permits(Set<CryptoPrimitive> primitives, Key key) {
+    final public boolean permits(Set<CryptoPrimitive> primitives, Key key) {
         return true;
     }
 
     @Override
-    public final boolean permits(Set<CryptoPrimitive> primitives,
+    final public boolean permits(Set<CryptoPrimitive> primitives,
             String algorithm, Key key, AlgorithmParameters parameters) {
         return checkAlgorithm(legacyAlgorithms, algorithm, decomposer);
     }

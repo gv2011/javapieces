@@ -44,16 +44,14 @@ public class ByteArrayTagOrder implements Comparator<byte[]> {
      *
      * @param  bytes1 first byte array to compare.
      * @param  bytes2 second byte array to compare.
-     * @return negative number if {@code bytes1 < bytes2},
-     *         0 if {@code bytes1 == bytes2},
-     *         positive number if {@code bytes1 > bytes2}.
+     * @return negative number if bytes1 < bytes2, 0 if bytes1 == bytes2,
+     * positive number if bytes1 > bytes2.
      *
      * @exception <code>ClassCastException</code>
      * if either argument is not a byte array.
      */
 
-    @Override
-    public final int compare(final byte[] bytes1, final byte[] bytes2) {
+    public final int compare(byte[] bytes1, byte[] bytes2) {
         // tag order is same as byte order ignoring any difference in
         // the constructivity bit (0x02)
         return (bytes1[0] | 0x20) - (bytes2[0] | 0x20);

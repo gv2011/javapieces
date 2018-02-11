@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,7 +42,7 @@ import sun.security.ssl.CipherSuite.*;
 import static sun.security.ssl.CipherSuite.*;
 import static sun.security.ssl.CipherSuite.CipherType.*;
 
-import sun.security.util.HexDumpEncoder;
+import sun.misc.HexDumpEncoder;
 
 
 /**
@@ -93,7 +93,7 @@ import sun.security.util.HexDumpEncoder;
 final class CipherBox {
 
     // A CipherBox that implements the identity operation
-    static final CipherBox NULL = new CipherBox();
+    final static CipherBox NULL = new CipherBox();
 
     /* Class and subclass dynamic debugging support */
     private static final Debug debug = Debug.getInstance("ssl");
@@ -154,15 +154,15 @@ final class CipherBox {
      * NULL cipherbox. Identity operation, no encryption.
      */
     private CipherBox() {
-        protocolVersion = ProtocolVersion.DEFAULT_TLS;
-        cipher = null;
-        cipherType = NULL_CIPHER;
-        fixedIv = new byte[0];
-        key = null;
-        mode = Cipher.ENCRYPT_MODE;    // choose at random
-        random = null;
-        tagSize = 0;
-        recordIvSize = 0;
+        this.protocolVersion = ProtocolVersion.DEFAULT;
+        this.cipher = null;
+        this.cipherType = STREAM_CIPHER;
+        this.fixedIv = new byte[0];
+        this.key = null;
+        this.mode = Cipher.ENCRYPT_MODE;    // choose at random
+        this.random = null;
+        this.tagSize = 0;
+        this.recordIvSize = 0;
     }
 
     /**
@@ -171,19 +171,19 @@ final class CipherBox {
      * @exception NoSuchAlgorithmException if no appropriate JCE Cipher
      * implementation could be found.
      */
-    private CipherBox(final ProtocolVersion protocolVersion, final BulkCipher bulkCipher,
-            final SecretKey key, IvParameterSpec iv, SecureRandom random,
-            final boolean encrypt) throws NoSuchAlgorithmException {
+    private CipherBox(ProtocolVersion protocolVersion, BulkCipher bulkCipher,
+            SecretKey key, IvParameterSpec iv, SecureRandom random,
+            boolean encrypt) throws NoSuchAlgorithmException {
         try {
             this.protocolVersion = protocolVersion;
-            cipher = JsseJce.getCipher(bulkCipher.transformation);
-            mode = encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE;
+            this.cipher = JsseJce.getCipher(bulkCipher.transformation);
+            this.mode = encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE;
 
             if (random == null) {
                 random = JsseJce.getSecureRandom();
             }
             this.random = random;
-            cipherType = bulkCipher.cipherType;
+            this.cipherType = bulkCipher.cipherType;
 
             /*
              * RFC 4346 recommends two algorithms used to generated the
@@ -197,7 +197,7 @@ final class CipherBox {
              */
             if (iv == null && bulkCipher.ivSize != 0 &&
                     mode == Cipher.DECRYPT_MODE &&
-                    protocolVersion.useTLS11PlusSpec()) {
+                    protocolVersion.v >= ProtocolVersion.TLS11.v) {
                 iv = getFixedMask(bulkCipher.ivSize);
             }
 
@@ -228,20 +228,20 @@ final class CipherBox {
                 // initialize now.
 
                 // Zeroize the variables that only apply to AEAD cipher
-                tagSize = 0;
-                fixedIv = new byte[0];
-                recordIvSize = 0;
+                this.tagSize = 0;
+                this.fixedIv = new byte[0];
+                this.recordIvSize = 0;
                 this.key = null;
 
                 // Initialize the cipher
                 cipher.init(mode, key, iv, random);
             }
-        } catch (final NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             throw e;
-        } catch (final Exception e) {
+        } catch (Exception e) {
             throw new NoSuchAlgorithmException
                     ("Could not create cipher " + bulkCipher, e);
-        } catch (final ExceptionInInitializerError e) {
+        } catch (ExceptionInInitializerError e) {
             throw new NoSuchAlgorithmException
                     ("Could not create cipher " + bulkCipher, e);
         }
@@ -250,14 +250,14 @@ final class CipherBox {
     /*
      * Factory method to obtain a new CipherBox object.
      */
-    static CipherBox newCipherBox(final ProtocolVersion version, final BulkCipher cipher,
-            final SecretKey key, final IvParameterSpec iv, final SecureRandom random,
-            final boolean encrypt) throws NoSuchAlgorithmException {
+    static CipherBox newCipherBox(ProtocolVersion version, BulkCipher cipher,
+            SecretKey key, IvParameterSpec iv, SecureRandom random,
+            boolean encrypt) throws NoSuchAlgorithmException {
         if (cipher.allowed == false) {
             throw new NoSuchAlgorithmException("Unsupported cipher " + cipher);
         }
 
-        if (cipher == BulkCipher.B_NULL) {
+        if (cipher == B_NULL) {
             return NULL;
         } else {
             return new CipherBox(version, cipher, key, iv, random, encrypt);
@@ -267,9 +267,9 @@ final class CipherBox {
     /*
      * Get a fixed mask, as the initial decryption IVs for TLS 1.1 or later.
      */
-    private static IvParameterSpec getFixedMask(final int ivSize) {
+    private static IvParameterSpec getFixedMask(int ivSize) {
         if (masks == null) {
-            masks = new Hashtable<>(5);
+            masks = new Hashtable<Integer, IvParameterSpec>(5);
         }
 
         IvParameterSpec iv = masks.get(ivSize);
@@ -285,20 +285,20 @@ final class CipherBox {
      * Encrypts a block of data, returning the size of the
      * resulting block.
      */
-    int encrypt(final byte[] buf, final int offset, int len) {
+    int encrypt(byte[] buf, int offset, int len) {
         if (cipher == null) {
             return len;
         }
 
         try {
-            final int blockSize = cipher.getBlockSize();
+            int blockSize = cipher.getBlockSize();
             if (cipherType == BLOCK_CIPHER) {
                 len = addPadding(buf, offset, len, blockSize);
             }
 
             if (debug != null && Debug.isOn("plaintext")) {
                 try {
-                    final HexDumpEncoder hd = new HexDumpEncoder();
+                    HexDumpEncoder hd = new HexDumpEncoder();
 
                     System.out.println(
                         "Padded plaintext before ENCRYPTION:  len = "
@@ -306,7 +306,7 @@ final class CipherBox {
                     hd.encodeBuffer(
                         new ByteArrayInputStream(buf, offset, len),
                         System.out);
-                } catch (final IOException e) { }
+                } catch (IOException e) { }
             }
 
 
@@ -320,7 +320,7 @@ final class CipherBox {
                         cipher.getProvider().getName(), ibe);
                 }
             } else {
-                final int newLen = cipher.update(buf, offset, len, buf, offset);
+                int newLen = cipher.update(buf, offset, len, buf, offset);
                 if (newLen != len) {
                     // catch BouncyCastle buffering error
                     throw new RuntimeException("Cipher buffering error " +
@@ -328,7 +328,7 @@ final class CipherBox {
                 }
                 return newLen;
             }
-        } catch (final ShortBufferException e) {
+        } catch (ShortBufferException e) {
             // unlikely to happen, we should have enough buffer space here
             throw new ArrayIndexOutOfBoundsException(e.toString());
         }
@@ -343,7 +343,7 @@ final class CipherBox {
      * set to last position padded/encrypted.  The limit may have changed
      * because of the added padding bytes.
      */
-    int encrypt(final ByteBuffer bb, final int outLimit) {
+    int encrypt(ByteBuffer bb, int outLimit) {
 
         int len = bb.remaining();
 
@@ -352,9 +352,9 @@ final class CipherBox {
             return len;
         }
 
-        final int pos = bb.position();
+        int pos = bb.position();
 
-        final int blockSize = cipher.getBlockSize();
+        int blockSize = cipher.getBlockSize();
         if (cipherType == BLOCK_CIPHER) {
             // addPadding adjusts pos/limit
             len = addPadding(bb, blockSize);
@@ -363,23 +363,23 @@ final class CipherBox {
 
         if (debug != null && Debug.isOn("plaintext")) {
             try {
-                final HexDumpEncoder hd = new HexDumpEncoder();
+                HexDumpEncoder hd = new HexDumpEncoder();
 
                 System.out.println(
                     "Padded plaintext before ENCRYPTION:  len = "
                     + len);
                 hd.encodeBuffer(bb.duplicate(), System.out);
 
-            } catch (final IOException e) { }
+            } catch (IOException e) { }
         }
 
         /*
          * Encrypt "in-place".  This does not add its own padding.
          */
-        final ByteBuffer dup = bb.duplicate();
+        ByteBuffer dup = bb.duplicate();
         if (cipherType == AEAD_CIPHER) {
             try {
-                final int outputSize = cipher.getOutputSize(dup.remaining());
+                int outputSize = cipher.getOutputSize(dup.remaining());
                 if (outputSize > bb.remaining()) {
                     // need to expand the limit of the output buffer for
                     // the authentication tag.
@@ -393,7 +393,7 @@ final class CipherBox {
                     }
                     bb.limit(pos + outputSize);
                 }
-                final int newLen = cipher.doFinal(dup, bb);
+                int newLen = cipher.doFinal(dup, bb);
                 if (newLen != outputSize) {
                     throw new RuntimeException(
                             "Cipher buffering error in JCE provider " +
@@ -411,7 +411,7 @@ final class CipherBox {
             int newLen;
             try {
                 newLen = cipher.update(dup, bb);
-            } catch (final ShortBufferException sbe) {
+            } catch (ShortBufferException sbe) {
                 // unlikely to happen
                 throw new RuntimeException("Cipher buffering error " +
                     "in JCE provider " + cipher.getProvider().getName());
@@ -448,8 +448,8 @@ final class CipherBox {
      * uniformly use the bad_record_mac alert to hide the specific type of
      * the error.
      */
-    int decrypt(final byte[] buf, final int offset, final int len,
-            final int tagLen) throws BadPaddingException {
+    int decrypt(byte[] buf, int offset, int len,
+            int tagLen) throws BadPaddingException {
         if (cipher == null) {
             return len;
         }
@@ -459,7 +459,7 @@ final class CipherBox {
             if (cipherType == AEAD_CIPHER) {
                 try {
                     newLen = cipher.doFinal(buf, offset, len, buf, offset);
-                } catch (final IllegalBlockSizeException ibse) {
+                } catch (IllegalBlockSizeException ibse) {
                     // unlikely to happen
                     throw new RuntimeException(
                         "Cipher error in AEAD mode in JCE provider " +
@@ -475,7 +475,7 @@ final class CipherBox {
             }
             if (debug != null && Debug.isOn("plaintext")) {
                 try {
-                    final HexDumpEncoder hd = new HexDumpEncoder();
+                    HexDumpEncoder hd = new HexDumpEncoder();
 
                     System.out.println(
                         "Padded plaintext after DECRYPTION:  len = "
@@ -483,28 +483,27 @@ final class CipherBox {
                     hd.encodeBuffer(
                         new ByteArrayInputStream(buf, offset, newLen),
                         System.out);
-                } catch (final IOException e) { }
+                } catch (IOException e) { }
             }
 
             if (cipherType == BLOCK_CIPHER) {
-                final int blockSize = cipher.getBlockSize();
+                int blockSize = cipher.getBlockSize();
                 newLen = removePadding(
                     buf, offset, newLen, tagLen, blockSize, protocolVersion);
 
-                if (protocolVersion.useTLS11PlusSpec()) {
+                if (protocolVersion.v >= ProtocolVersion.TLS11.v) {
                     if (newLen < blockSize) {
-                        throw new BadPaddingException("The length after " +
-                        "padding removal (" + newLen + ") should be larger " +
-                        "than <" + blockSize + "> since explicit IV used");
+                        throw new BadPaddingException("invalid explicit IV");
                     }
                 }
             }
             return newLen;
-        } catch (final ShortBufferException e) {
+        } catch (ShortBufferException e) {
             // unlikely to happen, we should have enough buffer space here
             throw new ArrayIndexOutOfBoundsException(e.toString());
         }
     }
+
 
     /*
      * Decrypts a block of data, returning the size of the
@@ -515,9 +514,9 @@ final class CipherBox {
      *
      *  @see decrypt(byte[], int, int)
      */
-    int decrypt(final ByteBuffer bb, final int tagLen) throws BadPaddingException {
+    int decrypt(ByteBuffer bb, int tagLen) throws BadPaddingException {
 
-        final int len = bb.remaining();
+        int len = bb.remaining();
 
         if (cipher == null) {
             bb.position(bb.limit());
@@ -528,13 +527,13 @@ final class CipherBox {
             /*
              * Decrypt "in-place".
              */
-            final int pos = bb.position();
-            final ByteBuffer dup = bb.duplicate();
+            int pos = bb.position();
+            ByteBuffer dup = bb.duplicate();
             int newLen;
             if (cipherType == AEAD_CIPHER) {
                 try {
                     newLen = cipher.doFinal(dup, bb);
-                } catch (final IllegalBlockSizeException ibse) {
+                } catch (IllegalBlockSizeException ibse) {
                     // unlikely to happen
                     throw new RuntimeException(
                         "Cipher error in AEAD mode \"" + ibse.getMessage() +
@@ -552,33 +551,31 @@ final class CipherBox {
             // reset the limit to the end of the decryted data
             bb.limit(pos + newLen);
 
-//            if (debug != null && Debug.isOn("plaintext")) {
-//                try {
-//                    HexDumpEncoder hd = new HexDumpEncoder();
-//
-//                    System.out.println(
-//                        "Padded plaintext after DECRYPTION:  len = "
-//                        + newLen);
-//
-//                    hd.encodeBuffer(
-//                        bb.duplicate().position(pos), System.out);
-//                } catch (IOException e) { }
-//            }
+            if (debug != null && Debug.isOn("plaintext")) {
+                try {
+                    HexDumpEncoder hd = new HexDumpEncoder();
+
+                    System.out.println(
+                        "Padded plaintext after DECRYPTION:  len = "
+                        + newLen);
+
+                    hd.encodeBuffer(
+                        (ByteBuffer)bb.duplicate().position(pos), System.out);
+                } catch (IOException e) { }
+            }
 
             /*
              * Remove the block padding.
              */
             if (cipherType == BLOCK_CIPHER) {
-                final int blockSize = cipher.getBlockSize();
+                int blockSize = cipher.getBlockSize();
                 bb.position(pos);
                 newLen = removePadding(bb, tagLen, blockSize, protocolVersion);
 
                 // check the explicit IV of TLS v1.1 or later
-                if (protocolVersion.useTLS11PlusSpec()) {
+                if (protocolVersion.v >= ProtocolVersion.TLS11.v) {
                     if (newLen < blockSize) {
-                        throw new BadPaddingException("The length after " +
-                        "padding removal (" + newLen + ") should be larger " +
-                        "than <" + blockSize + "> since explicit IV used");
+                        throw new BadPaddingException("invalid explicit IV");
                     }
 
                     // reset the position to the end of the decrypted data
@@ -586,14 +583,14 @@ final class CipherBox {
                 }
             }
             return newLen;
-        } catch (final ShortBufferException e) {
+        } catch (ShortBufferException e) {
             // unlikely to happen, we should have enough buffer space here
             throw new ArrayIndexOutOfBoundsException(e.toString());
         }
     }
 
-    private static int addPadding(final byte[] buf, int offset, final int len,
-            final int blockSize) {
+    private static int addPadding(byte[] buf, int offset, int len,
+            int blockSize) {
         int     newlen = len + 1;
         byte    pad;
         int     i;
@@ -623,9 +620,9 @@ final class CipherBox {
      * Limit is advanced to the new buffer length.
      * Position is equal to limit.
      */
-    private static int addPadding(final ByteBuffer bb, final int blockSize) {
+    private static int addPadding(ByteBuffer bb, int blockSize) {
 
-        final int     len = bb.remaining();
+        int     len = bb.remaining();
         int     offset = bb.position();
 
         int     newlen = len + 1;
@@ -664,7 +661,7 @@ final class CipherBox {
      * The caller MUST ensure that the len parameter is a positive number.
      */
     private static int[] checkPadding(
-            final byte[] buf, final int offset, final int len, final byte pad) {
+            byte[] buf, int offset, int len, byte pad) {
 
         if (len <= 0) {
             throw new RuntimeException("padding len must be positive");
@@ -672,7 +669,7 @@ final class CipherBox {
 
         // An array of hits is used to prevent Hotspot optimization for
         // the purpose of a constant-time check.
-        final int[] results = {0, 0};    // {missed #, matched #}
+        int[] results = {0, 0};    // {missed #, matched #}
         for (int i = 0; i <= 256;) {
             for (int j = 0; j < len && i <= 256; j++, i++) {     // j <= i
                 if (buf[offset + j] != pad) {
@@ -693,7 +690,7 @@ final class CipherBox {
      *
      * The caller MUST ensure that the bb parameter has remaining.
      */
-    private static int[] checkPadding(final ByteBuffer bb, final byte pad) {
+    private static int[] checkPadding(ByteBuffer bb, byte pad) {
 
         if (!bb.hasRemaining()) {
             throw new RuntimeException("hasRemaining() must be positive");
@@ -701,7 +698,7 @@ final class CipherBox {
 
         // An array of hits is used to prevent Hotspot optimization for
         // the purpose of a constant-time check.
-        final int[] results = {0, 0};    // {missed #, matched #}
+        int[] results = {0, 0};    // {missed #, matched #}
         bb.mark();
         for (int i = 0; i <= 256; bb.reset()) {
             for (; bb.hasRemaining() && i <= 256; i++) {
@@ -726,15 +723,15 @@ final class CipherBox {
      * TLS also allows any amount of padding from 1 and 256 bytes as long
      * as it makes the data a multiple of the block size
      */
-    private static int removePadding(final byte[] buf, final int offset, final int len,
-            final int tagLen, final int blockSize,
-            final ProtocolVersion protocolVersion) throws BadPaddingException {
+    private static int removePadding(byte[] buf, int offset, int len,
+            int tagLen, int blockSize,
+            ProtocolVersion protocolVersion) throws BadPaddingException {
 
         // last byte is length byte (i.e. actual padding length - 1)
-        final int padOffset = offset + len - 1;
-        final int padLen = buf[padOffset] & 0xFF;
+        int padOffset = offset + len - 1;
+        int padLen = buf[padOffset] & 0xFF;
 
-        final int newLen = len - (padLen + 1);
+        int newLen = len - (padLen + 1);
         if ((newLen - tagLen) < 0) {
             // If the buffer is not long enough to contain the padding plus
             // a MAC tag, do a dummy constant-time padding check.
@@ -747,9 +744,9 @@ final class CipherBox {
         }
 
         // The padding data should be filled with the padding length value.
-        final int[] results = checkPadding(buf, offset + newLen,
+        int[] results = checkPadding(buf, offset + newLen,
                         padLen + 1, (byte)(padLen & 0xFF));
-        if (protocolVersion.useTLS10PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS10.v) {
             if (results[0] != 0) {          // padding data has invalid bytes
                 throw new BadPaddingException("Invalid TLS padding data");
             }
@@ -759,9 +756,7 @@ final class CipherBox {
             // so accept that as well
             // v3 does not require any particular value for the other bytes
             if (padLen > blockSize) {
-                throw new BadPaddingException("Padding length (" +
-                padLen + ") of SSLv3 message should not be bigger " +
-                "than the block size (" + blockSize + ")");
+                throw new BadPaddingException("Invalid SSLv3 padding");
             }
         }
         return newLen;
@@ -770,18 +765,18 @@ final class CipherBox {
     /*
      * Position/limit is equal the removed padding.
      */
-    private static int removePadding(final ByteBuffer bb,
-            final int tagLen, final int blockSize,
-            final ProtocolVersion protocolVersion) throws BadPaddingException {
+    private static int removePadding(ByteBuffer bb,
+            int tagLen, int blockSize,
+            ProtocolVersion protocolVersion) throws BadPaddingException {
 
-        final int len = bb.remaining();
-        final int offset = bb.position();
+        int len = bb.remaining();
+        int offset = bb.position();
 
         // last byte is length byte (i.e. actual padding length - 1)
-        final int padOffset = offset + len - 1;
-        final int padLen = bb.get(padOffset) & 0xFF;
+        int padOffset = offset + len - 1;
+        int padLen = bb.get(padOffset) & 0xFF;
 
-        final int newLen = len - (padLen + 1);
+        int newLen = len - (padLen + 1);
         if ((newLen - tagLen) < 0) {
             // If the buffer is not long enough to contain the padding plus
             // a MAC tag, do a dummy constant-time padding check.
@@ -794,10 +789,10 @@ final class CipherBox {
         }
 
         // The padding data should be filled with the padding length value.
-        final int[] results = checkPadding(
-                (ByteBuffer) bb.duplicate().position(offset + newLen),
+        int[] results = checkPadding(
+                (ByteBuffer)bb.duplicate().position(offset + newLen),
                 (byte)(padLen & 0xFF));
-        if (protocolVersion.useTLS10PlusSpec()) {
+        if (protocolVersion.v >= ProtocolVersion.TLS10.v) {
             if (results[0] != 0) {          // padding data has invalid bytes
                 throw new BadPaddingException("Invalid TLS padding data");
             }
@@ -807,9 +802,7 @@ final class CipherBox {
             // so accept that as well
             // v3 does not require any particular value for the other bytes
             if (padLen > blockSize) {
-                throw new BadPaddingException("Padding length (" +
-                padLen + ") of SSLv3 message should not be bigger " +
-                "than the block size (" + blockSize + ")");
+                throw new BadPaddingException("Invalid SSLv3 padding");
             }
         }
 
@@ -833,7 +826,7 @@ final class CipherBox {
                 // ignore return value.
                 cipher.doFinal();
             }
-        } catch (final Exception e) {
+        } catch (Exception e) {
             // swallow all types of exceptions.
         }
     }
@@ -880,7 +873,7 @@ final class CipherBox {
                 // For block ciphers, the explicit IV length is of length
                 // SecurityParameters.record_iv_length, which is equal to
                 // the SecurityParameters.block_size.
-                if (protocolVersion.useTLS11PlusSpec()) {
+                if (protocolVersion.v >= ProtocolVersion.TLS11.v) {
                     return cipher.getBlockSize();
                 }
                 break;
@@ -908,12 +901,12 @@ final class CipherBox {
      *
      * @return the explicit nonce size of the cipher.
      */
-    int applyExplicitNonce(final Authenticator authenticator, final byte contentType,
-            final ByteBuffer bb, final byte[] sequence) throws BadPaddingException {
+    int applyExplicitNonce(Authenticator authenticator, byte contentType,
+            ByteBuffer bb) throws BadPaddingException {
         switch (cipherType) {
             case BLOCK_CIPHER:
                 // sanity check length of the ciphertext
-                final int tagLen = (authenticator instanceof MAC) ?
+                int tagLen = (authenticator instanceof MAC) ?
                                     ((MAC)authenticator).MAClen() : 0;
                 if (tagLen != 0) {
                     if (!sanityCheck(tagLen, bb.remaining())) {
@@ -925,25 +918,22 @@ final class CipherBox {
                 // For block ciphers, the explicit IV length is of length
                 // SecurityParameters.record_iv_length, which is equal to
                 // the SecurityParameters.block_size.
-                if (protocolVersion.useTLS11PlusSpec()) {
+                if (protocolVersion.v >= ProtocolVersion.TLS11.v) {
                     return cipher.getBlockSize();
                 }
                 break;
             case AEAD_CIPHER:
                 if (bb.remaining() < (recordIvSize + tagSize)) {
                     throw new BadPaddingException(
-                        "Insufficient buffer remaining for AEAD cipher " +
-                        "fragment (" + bb.remaining() + "). Needs to be " +
-                        "more than or equal to IV size (" + recordIvSize +
-                         ") + tag size (" + tagSize + ")");
+                                        "invalid AEAD cipher fragment");
                 }
 
                 // initialize the AEAD cipher for the unique IV
-                final byte[] iv = Arrays.copyOf(fixedIv,
+                byte[] iv = Arrays.copyOf(fixedIv,
                                     fixedIv.length + recordIvSize);
                 bb.get(iv, fixedIv.length, recordIvSize);
                 bb.position(bb.position() - recordIvSize);
-                final GCMParameterSpec spec = new GCMParameterSpec(tagSize * 8, iv);
+                GCMParameterSpec spec = new GCMParameterSpec(tagSize * 8, iv);
                 try {
                     cipher.init(mode, key, spec, random);
                 } catch (InvalidKeyException |
@@ -954,9 +944,8 @@ final class CipherBox {
                 }
 
                 // update the additional authentication data
-                final byte[] aad = authenticator.acquireAuthenticationBytes(
-                        contentType, bb.remaining() - recordIvSize - tagSize,
-                        sequence);
+                byte[] aad = authenticator.acquireAuthenticationBytes(
+                        contentType, bb.remaining() - recordIvSize - tagSize);
                 cipher.updateAAD(aad);
 
                 return recordIvSize;
@@ -965,6 +954,33 @@ final class CipherBox {
         }
 
        return 0;
+    }
+
+    /*
+     * Applies the explicit nonce/IV to this cipher. This method is used to
+     * decrypt an SSL/TLS input record.
+     *
+     * The returned value is the SecurityParameters.record_iv_length in
+     * RFC 4346/5246.  It is the size of explicit IV for CBC mode, and the
+     * size of explicit nonce for AEAD mode.
+     *
+     * @param  authenticator the authenticator to get the additional
+     *         authentication data
+     * @param  contentType the content type of the input record
+     * @param  buf the byte array to get the explicit nonce from
+     * @param  offset the offset of the byte buffer
+     * @param  cipheredLength the ciphered fragment length of the output
+     *         record, it is the TLSCiphertext.length in RFC 4346/5246.
+     *
+     * @return the explicit nonce size of the cipher.
+     */
+    int applyExplicitNonce(Authenticator authenticator,
+            byte contentType, byte[] buf, int offset,
+            int cipheredLength) throws BadPaddingException {
+
+        ByteBuffer bb = ByteBuffer.wrap(buf, offset, cipheredLength);
+
+        return applyExplicitNonce(authenticator, contentType, bb);
     }
 
     /*
@@ -983,13 +999,13 @@ final class CipherBox {
      *
      * @return the explicit nonce of the cipher.
      */
-    byte[] createExplicitNonce(final Authenticator authenticator,
-            final byte contentType, final int fragmentLength) {
+    byte[] createExplicitNonce(Authenticator authenticator,
+            byte contentType, int fragmentLength) {
 
         byte[] nonce = new byte[0];
         switch (cipherType) {
             case BLOCK_CIPHER:
-                if (protocolVersion.useTLS11PlusSpec()) {
+                if (protocolVersion.v >= ProtocolVersion.TLS11.v) {
                     // For block ciphers, the explicit IV length is of length
                     // SecurityParameters.record_iv_length, which is equal to
                     // the SecurityParameters.block_size.
@@ -1005,10 +1021,10 @@ final class CipherBox {
                 nonce = authenticator.sequenceNumber();
 
                 // initialize the AEAD cipher for the unique IV
-                final byte[] iv = Arrays.copyOf(fixedIv,
+                byte[] iv = Arrays.copyOf(fixedIv,
                                             fixedIv.length + nonce.length);
                 System.arraycopy(nonce, 0, iv, fixedIv.length, nonce.length);
-                final GCMParameterSpec spec = new GCMParameterSpec(tagSize * 8, iv);
+                GCMParameterSpec spec = new GCMParameterSpec(tagSize * 8, iv);
                 try {
                     cipher.init(mode, key, spec, random);
                 } catch (InvalidKeyException |
@@ -1018,101 +1034,14 @@ final class CipherBox {
                                 "invalid key or spec in GCM mode", ikae);
                 }
 
-                // Update the additional authentication data, using the
-                // implicit sequence number of the authenticator.
-                final byte[] aad = authenticator.acquireAuthenticationBytes(
-                                        contentType, fragmentLength, null);
+                // update the additional authentication data
+                byte[] aad = authenticator.acquireAuthenticationBytes(
+                                                contentType, fragmentLength);
                 cipher.updateAAD(aad);
                 break;
         }
 
         return nonce;
-    }
-
-    // See also CipherSuite.calculatePacketSize().
-    int calculatePacketSize(final int fragmentSize, final int macLen, final int headerSize) {
-        int packetSize = fragmentSize;
-        if (cipher != null) {
-            final int blockSize = cipher.getBlockSize();
-            switch (cipherType) {
-                case BLOCK_CIPHER:
-                    packetSize += macLen;
-                    packetSize += 1;        // 1 byte padding length field
-                    packetSize +=           // use the minimal padding
-                            (blockSize - (packetSize % blockSize)) % blockSize;
-                    if (protocolVersion.useTLS11PlusSpec()) {
-                        packetSize += blockSize;        // explicit IV
-                    }
-
-                    break;
-                case AEAD_CIPHER:
-                    packetSize += recordIvSize;
-                    packetSize += tagSize;
-
-                    break;
-                default:    // NULL_CIPHER or STREAM_CIPHER
-                    packetSize += macLen;
-            }
-        }
-
-        return packetSize + headerSize;
-    }
-
-    // See also CipherSuite.calculateFragSize().
-    int calculateFragmentSize(final int packetLimit, final int macLen, final int headerSize) {
-        int fragLen = packetLimit - headerSize;
-        if (cipher != null) {
-            final int blockSize = cipher.getBlockSize();
-            switch (cipherType) {
-                case BLOCK_CIPHER:
-                    if (protocolVersion.useTLS11PlusSpec()) {
-                        fragLen -= blockSize;           // explicit IV
-                    }
-                    fragLen -= (fragLen % blockSize);   // cannot hold a block
-                    // No padding for a maximum fragment.
-                    fragLen -= 1;       // 1 byte padding length field: 0x00
-                    fragLen -= macLen;
-
-                    break;
-                case AEAD_CIPHER:
-                    fragLen -= recordIvSize;
-                    fragLen -= tagSize;
-
-                    break;
-                default:    // NULL_CIPHER or STREAM_CIPHER
-                    fragLen -= macLen;
-            }
-        }
-
-        return fragLen;
-    }
-
-    // Estimate the maximum fragment size of a received packet.
-    int estimateFragmentSize(final int packetSize, final int macLen, final int headerSize) {
-        int fragLen = packetSize - headerSize;
-        if (cipher != null) {
-            final int blockSize = cipher.getBlockSize();
-            switch (cipherType) {
-                case BLOCK_CIPHER:
-                    if (protocolVersion.useTLS11PlusSpec()) {
-                        fragLen -= blockSize;       // explicit IV
-                    }
-                    // No padding for a maximum fragment.
-                    fragLen -= 1;       // 1 byte padding length field: 0x00
-                    fragLen -= macLen;
-
-                    break;
-                case AEAD_CIPHER:
-                    fragLen -= recordIvSize;
-                    fragLen -= tagSize;
-
-                    break;
-                default:    // NULL_CIPHER or STREAM_CIPHER
-                    fragLen -= macLen;
-            }
-        }
-
-        return fragLen;
     }
 
     /**
@@ -1128,16 +1057,16 @@ final class CipherBox {
      *
      * @return true if the length of a fragment matches above requirements
      */
-    private boolean sanityCheck(final int tagLen, final int fragmentLen) {
+    private boolean sanityCheck(int tagLen, int fragmentLen) {
         if (!isCBCMode()) {
             return fragmentLen >= tagLen;
         }
 
-        final int blockSize = cipher.getBlockSize();
+        int blockSize = cipher.getBlockSize();
         if ((fragmentLen % blockSize) == 0) {
             int minimal = tagLen + 1;
             minimal = (minimal >= blockSize) ? minimal : blockSize;
-            if (protocolVersion.useTLS11PlusSpec()) {
+            if (protocolVersion.v >= ProtocolVersion.TLS11.v) {
                 minimal += blockSize;   // plus the size of the explicit IV
             }
 

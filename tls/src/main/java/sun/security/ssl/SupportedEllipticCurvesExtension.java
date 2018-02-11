@@ -41,7 +41,7 @@ import javax.net.ssl.SSLProtocolException;
 
 import sun.security.action.GetPropertyAction;
 
-final class EllipticCurvesExtension extends HelloExtension {
+final class SupportedEllipticCurvesExtension extends HelloExtension {
 
     /* Class and subclass dynamic debugging support */
     private static final Debug debug = Debug.getInstance("ssl");
@@ -192,18 +192,18 @@ final class EllipticCurvesExtension extends HelloExtension {
         }
 
         if (debug != null && idList.isEmpty()) {
-            Debug.log(
+            debug.println(
                 "Initialized [jdk.tls.namedGroups|default] list contains " +
                 "no available elliptic curves. " +
                 (property != null ? "(" + property + ")" : "[Default]"));
         }
 
-        supportedCurveIds = new int[idList.size()];
-        int i = 0;
-        for (Integer id : idList) {
-            supportedCurveIds[i++] = id;
+            supportedCurveIds = new int[idList.size()];
+            int i = 0;
+            for (Integer id : idList) {
+                supportedCurveIds[i++] = id;
+            }
         }
-    }
 
     // check whether the curve is supported by the underlying providers
     private static boolean isAvailableCurve(int curveId) {
@@ -226,16 +226,14 @@ final class EllipticCurvesExtension extends HelloExtension {
         return false;
     }
 
-    private EllipticCurvesExtension(int[] curveIds) {
+    private SupportedEllipticCurvesExtension(int[] curveIds) {
         super(ExtensionType.EXT_ELLIPTIC_CURVES);
-
         this.curveIds = curveIds;
     }
 
-    EllipticCurvesExtension(HandshakeInStream s, int len)
+    SupportedEllipticCurvesExtension(HandshakeInStream s, int len)
             throws IOException {
         super(ExtensionType.EXT_ELLIPTIC_CURVES);
-
         int k = s.getInt16();
         if (((len & 1) != 0) || (k + 2 != len)) {
             throw new SSLProtocolException("Invalid " + type + " extension");
@@ -257,7 +255,7 @@ final class EllipticCurvesExtension extends HelloExtension {
         return getActiveCurves(constraints) >= 0;
     }
 
-    static EllipticCurvesExtension createExtension(
+    static SupportedEllipticCurvesExtension createExtension(
                 AlgorithmConstraints constraints) {
 
         ArrayList<Integer> idList = new ArrayList<>(supportedCurveIds.length);
@@ -276,7 +274,7 @@ final class EllipticCurvesExtension extends HelloExtension {
                 ids[i++] = id;
             }
 
-            return new EllipticCurvesExtension(ids);
+            return new SupportedEllipticCurvesExtension(ids);
         }
 
         return null;
@@ -337,7 +335,6 @@ final class EllipticCurvesExtension extends HelloExtension {
             } else {
                 sb.append(", ");
             }
-            // first check if it is a known named curve, then try other cases.
             String curveName = getCurveName(curveId);
             if (curveName != null) {
                 sb.append(curveName);

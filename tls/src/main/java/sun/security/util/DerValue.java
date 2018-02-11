@@ -28,6 +28,7 @@ package sun.security.util;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.Date;
+import sun.misc.IOUtils;
 
 /**
  * Represents a single DER-encoded value.  DER encoding rules are a subset
@@ -44,8 +45,8 @@ import java.util.Date;
  * (such as PKCS #10 certificate requests, and some kinds of PKCS #7 data).
  *
  * A note with respect to T61/Teletex strings: From RFC 1617, section 4.1.3
- * and RFC 5280, section 8, we assume that this kind of string will contain
- * ISO-8859-1 characters only.
+ * and RFC 3280, section 4.1.2.4., we assume that this kind of string will
+ * contain ISO-8859-1 characters only.
  *
  *
  * @author David Brownell
@@ -83,52 +84,52 @@ public class DerValue {
      */
 
     /** Tag value indicating an ASN.1 "BOOLEAN" value. */
-    public static final byte    tag_Boolean = 0x01;
+    public final static byte    tag_Boolean = 0x01;
 
     /** Tag value indicating an ASN.1 "INTEGER" value. */
-    public static final byte    tag_Integer = 0x02;
+    public final static byte    tag_Integer = 0x02;
 
     /** Tag value indicating an ASN.1 "BIT STRING" value. */
-    public static final byte    tag_BitString = 0x03;
+    public final static byte    tag_BitString = 0x03;
 
     /** Tag value indicating an ASN.1 "OCTET STRING" value. */
-    public static final byte    tag_OctetString = 0x04;
+    public final static byte    tag_OctetString = 0x04;
 
     /** Tag value indicating an ASN.1 "NULL" value. */
-    public static final byte    tag_Null = 0x05;
+    public final static byte    tag_Null = 0x05;
 
     /** Tag value indicating an ASN.1 "OBJECT IDENTIFIER" value. */
-    public static final byte    tag_ObjectId = 0x06;
+    public final static byte    tag_ObjectId = 0x06;
 
     /** Tag value including an ASN.1 "ENUMERATED" value */
-    public static final byte    tag_Enumerated = 0x0A;
+    public final static byte    tag_Enumerated = 0x0A;
 
     /** Tag value indicating an ASN.1 "UTF8String" value. */
-    public static final byte    tag_UTF8String = 0x0C;
+    public final static byte    tag_UTF8String = 0x0C;
 
     /** Tag value including a "printable" string */
-    public static final byte    tag_PrintableString = 0x13;
+    public final static byte    tag_PrintableString = 0x13;
 
     /** Tag value including a "teletype" string */
-    public static final byte    tag_T61String = 0x14;
+    public final static byte    tag_T61String = 0x14;
 
     /** Tag value including an ASCII string */
-    public static final byte    tag_IA5String = 0x16;
+    public final static byte    tag_IA5String = 0x16;
 
     /** Tag value indicating an ASN.1 "UTCTime" value. */
-    public static final byte    tag_UtcTime = 0x17;
+    public final static byte    tag_UtcTime = 0x17;
 
     /** Tag value indicating an ASN.1 "GeneralizedTime" value. */
-    public static final byte    tag_GeneralizedTime = 0x18;
+    public final static byte    tag_GeneralizedTime = 0x18;
 
     /** Tag value indicating an ASN.1 "GenerallString" value. */
-    public static final byte    tag_GeneralString = 0x1B;
+    public final static byte    tag_GeneralString = 0x1B;
 
     /** Tag value indicating an ASN.1 "UniversalString" value. */
-    public static final byte    tag_UniversalString = 0x1C;
+    public final static byte    tag_UniversalString = 0x1C;
 
     /** Tag value indicating an ASN.1 "BMPString" value. */
-    public static final byte    tag_BMPString = 0x1E;
+    public final static byte    tag_BMPString = 0x1E;
 
     // CONSTRUCTED seq/set
 
@@ -136,25 +137,25 @@ public class DerValue {
      * Tag value indicating an ASN.1
      * "SEQUENCE" (zero to N elements, order is significant).
      */
-    public static final byte    tag_Sequence = 0x30;
+    public final static byte    tag_Sequence = 0x30;
 
     /**
      * Tag value indicating an ASN.1
      * "SEQUENCE OF" (one to N elements, order is significant).
      */
-    public static final byte    tag_SequenceOf = 0x30;
+    public final static byte    tag_SequenceOf = 0x30;
 
     /**
      * Tag value indicating an ASN.1
      * "SET" (zero to N members, order does not matter).
      */
-    public static final byte    tag_Set = 0x31;
+    public final static byte    tag_Set = 0x31;
 
     /**
      * Tag value indicating an ASN.1
      * "SET OF" (one to N members, order does not matter).
      */
-    public static final byte    tag_SetOf = 0x31;
+    public final static byte    tag_SetOf = 0x31;
 
     /*
      * These values are the high order bits for the other kinds of tags.
@@ -270,7 +271,7 @@ public class DerValue {
             if (tag != inbuf.read())
                 throw new IOException
                         ("Indefinite length encoding not supported");
-            length = DerInputStream.getDefiniteLength(inbuf);
+            length = DerInputStream.getLength(inbuf);
             buffer = inbuf.dup();
             buffer.truncate(length);
             data = new DerInputStream(buffer);
@@ -319,7 +320,7 @@ public class DerValue {
      *
      * @param buf the buffer
      * @param offset start point of the single DER-encoded dataum
-     * @param len how many bytes are in the encoded datum
+     * @param length how many bytes are in the encoded datum
      */
     public DerValue(byte[] buf, int offset, int len) throws IOException {
         this(buf, offset, len, true);
@@ -402,7 +403,7 @@ public class DerValue {
             if (tag != in.read())
                 throw new IOException
                         ("Indefinite length encoding not supported");
-            length = DerInputStream.getDefiniteLength(in);
+            length = DerInputStream.getLength(in);
         }
 
         if (fullyBuffered && in.available() != length)
@@ -620,7 +621,7 @@ public class DerValue {
      * Returns an ASN.1 BIT STRING value, with the tag assumed implicit
      * based on the parameter.  The bit string must be byte-aligned.
      *
-     * @param tagImplicit if true, the tag is assumed implicit.
+     * @params tagImplicit if true, the tag is assumed implicit.
      * @return the bit string held in this value
      */
     public byte[] getBitString(boolean tagImplicit) throws IOException {
@@ -636,7 +637,7 @@ public class DerValue {
      * Returns an ASN.1 BIT STRING value, with the tag assumed implicit
      * based on the parameter.  The bit string need not be byte-aligned.
      *
-     * @param tagImplicit if true, the tag is assumed implicit.
+     * @params tagImplicit if true, the tag is assumed implicit.
      * @return the bit string held in this value
      */
     public BitArray getUnalignedBitString(boolean tagImplicit)
@@ -772,21 +773,29 @@ public class DerValue {
     }
 
     /**
+     * Returns true iff the other object is a DER value which
+     * is bitwise equal to this one.
+     *
+     * @param other the object being compared with this one
+     */
+    public boolean equals(Object other) {
+        if (other instanceof DerValue)
+            return equals((DerValue)other);
+        else
+            return false;
+    }
+
+    /**
      * Bitwise equality comparison.  DER encoded values have a single
      * encoding, so that bitwise equality of the encoded values is an
      * efficient way to establish equivalence of the unencoded values.
      *
-     * @param o the object being compared with this one
+     * @param other the object being compared with this one
      */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(DerValue other) {
+        if (this == other) {
             return true;
         }
-        if (!(o instanceof DerValue)) {
-            return false;
-        }
-        DerValue other = (DerValue) o;
         if (tag != other.tag) {
             return false;
         }
@@ -819,7 +828,6 @@ public class DerValue {
      *
      * @return printable representation of the value
      */
-    @Override
     public String toString() {
         try {
 
@@ -918,11 +926,11 @@ public class DerValue {
     /**
      * Create the tag of the attribute.
      *
-     * @param tagClass the tag class type, one of UNIVERSAL, CONTEXT,
+     * @params class the tag class type, one of UNIVERSAL, CONTEXT,
      *               APPLICATION or PRIVATE
-     * @param form if true, the value is constructed, otherwise it
+     * @params form if true, the value is constructed, otherwise it
      * is primitive.
-     * @param val the tag value
+     * @params val the tag value
      */
     public static byte createTag(byte tagClass, boolean form, byte val) {
         byte tag = (byte)(tagClass | val);
@@ -936,7 +944,7 @@ public class DerValue {
      * Set the tag of the attribute. Commonly used to reset the
      * tag value used for IMPLICIT encodings.
      *
-     * @param tag the tag value
+     * @params tag the tag value
      */
     public void resetTag(byte tag) {
         this.tag = tag;
@@ -947,7 +955,6 @@ public class DerValue {
      *
      * @return a hashcode for this DerValue.
      */
-    @Override
     public int hashCode() {
         return toString().hashCode();
     }

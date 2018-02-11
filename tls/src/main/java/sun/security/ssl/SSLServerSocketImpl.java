@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -68,7 +68,7 @@ class SSLServerSocketImpl extends SSLServerSocket
     private SSLContextImpl      sslContext;
 
     /* Do newly accepted connections require clients to authenticate? */
-    private ClientAuthType    clientAuthType = ClientAuthType.CLIENT_AUTH_NONE;
+    private byte                doClientAuth = SSLEngineImpl.clauth_none;
 
     /* Do new connections created here use the "server" mode of SSL? */
     private boolean             useServerMode = true;
@@ -91,9 +91,6 @@ class SSLServerSocketImpl extends SSLServerSocket
     // The server name indication
     Collection<SNIMatcher>      sniMatchers =
                                     Collections.<SNIMatcher>emptyList();
-
-    // Configured application protocol values
-    String[] applicationProtocols = new String[0];
 
     /*
      * Whether local cipher suites preference in server side should be
@@ -187,7 +184,7 @@ class SSLServerSocketImpl extends SSLServerSocket
      * that the system defaults are in effect.
      */
     @Override
-    public synchronized String[] getEnabledCipherSuites() {
+    synchronized public String[] getEnabledCipherSuites() {
         return enabledCipherSuites.toStringArray();
     }
 
@@ -199,7 +196,7 @@ class SSLServerSocketImpl extends SSLServerSocket
      *  means to accept system defaults.
      */
     @Override
-    public synchronized void setEnabledCipherSuites(String[] suites) {
+    synchronized public void setEnabledCipherSuites(String[] suites) {
         enabledCipherSuites = new CipherSuiteList(suites);
     }
 
@@ -218,12 +215,12 @@ class SSLServerSocketImpl extends SSLServerSocket
      *  named by the parameter is not supported.
      */
     @Override
-    public synchronized void setEnabledProtocols(String[] protocols) {
+    synchronized public void setEnabledProtocols(String[] protocols) {
         enabledProtocols = new ProtocolList(protocols);
     }
 
     @Override
-    public synchronized String[] getEnabledProtocols() {
+    synchronized public String[] getEnabledProtocols() {
         return enabledProtocols.toStringArray();
     }
 
@@ -233,13 +230,13 @@ class SSLServerSocketImpl extends SSLServerSocket
      */
     @Override
     public void setNeedClientAuth(boolean flag) {
-        clientAuthType = (flag ? ClientAuthType.CLIENT_AUTH_REQUIRED :
-                ClientAuthType.CLIENT_AUTH_NONE);
+        doClientAuth = (flag ?
+            SSLEngineImpl.clauth_required : SSLEngineImpl.clauth_none);
     }
 
     @Override
     public boolean getNeedClientAuth() {
-        return (clientAuthType == ClientAuthType.CLIENT_AUTH_REQUIRED);
+        return (doClientAuth == SSLEngineImpl.clauth_required);
     }
 
     /**
@@ -248,13 +245,13 @@ class SSLServerSocketImpl extends SSLServerSocket
      */
     @Override
     public void setWantClientAuth(boolean flag) {
-        clientAuthType = (flag ? ClientAuthType.CLIENT_AUTH_REQUESTED :
-                ClientAuthType.CLIENT_AUTH_NONE);
+        doClientAuth = (flag ?
+            SSLEngineImpl.clauth_requested : SSLEngineImpl.clauth_none);
     }
 
     @Override
     public boolean getWantClientAuth() {
-        return (clientAuthType == ClientAuthType.CLIENT_AUTH_REQUESTED);
+        return (doClientAuth == SSLEngineImpl.clauth_requested);
     }
 
     /**
@@ -306,7 +303,7 @@ class SSLServerSocketImpl extends SSLServerSocket
      * Returns the SSLParameters in effect for newly accepted connections.
      */
     @Override
-    public synchronized SSLParameters getSSLParameters() {
+    synchronized public SSLParameters getSSLParameters() {
         SSLParameters params = super.getSSLParameters();
 
         // the super implementation does not handle the following parameters
@@ -314,7 +311,7 @@ class SSLServerSocketImpl extends SSLServerSocket
         params.setAlgorithmConstraints(algorithmConstraints);
         params.setSNIMatchers(sniMatchers);
         params.setUseCipherSuitesOrder(preferLocalCipherSuites);
-        params.setApplicationProtocols(applicationProtocols);
+
 
         return params;
     }
@@ -323,7 +320,7 @@ class SSLServerSocketImpl extends SSLServerSocket
      * Applies SSLParameters to newly accepted connections.
      */
     @Override
-    public synchronized void setSSLParameters(SSLParameters params) {
+    synchronized public void setSSLParameters(SSLParameters params) {
         super.setSSLParameters(params);
 
         // the super implementation does not handle the following parameters
@@ -334,7 +331,6 @@ class SSLServerSocketImpl extends SSLServerSocket
         if (matchers != null) {
             sniMatchers = params.getSNIMatchers();
         }
-        applicationProtocols = params.getApplicationProtocols();
     }
 
     /**
@@ -345,9 +341,9 @@ class SSLServerSocketImpl extends SSLServerSocket
     @Override
     public Socket accept() throws IOException {
         SSLSocketImpl s = new SSLSocketImpl(sslContext, useServerMode,
-            enabledCipherSuites, clientAuthType, enableSessionCreation,
+            enabledCipherSuites, doClientAuth, enableSessionCreation,
             enabledProtocols, identificationProtocol, algorithmConstraints,
-            sniMatchers, preferLocalCipherSuites, applicationProtocols);
+            sniMatchers, preferLocalCipherSuites);
 
         implAccept(s);
         s.doneConnect();

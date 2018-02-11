@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -108,10 +108,7 @@ final class SSLSessionImpl extends ExtendedSSLSession {
     private String[]            localSupportedSignAlgs;
     private String[]            peerSupportedSignAlgs;
     private List<SNIServerName>    requestedServerNames;
-    private List<byte[]>        statusResponses;
 
-    private int                 negotiatedMaxFragLen;
-    private int                 maximumPacketSize;
 
     // Principals for non-certificate based cipher suites
     private Principal peerPrincipal;
@@ -130,7 +127,7 @@ final class SSLSessionImpl extends ExtendedSSLSession {
      * also since counters make shorter debugging IDs than the big ones
      * we use in the protocol for uniqueness-over-time.
      */
-    private static volatile int counter;
+    private static volatile int counter = 0;
 
     /*
      * Use of session caches is globally enabled/disabled.
@@ -180,8 +177,6 @@ final class SSLSessionImpl extends ExtendedSSLSession {
         sessionCount = ++counter;
         localSupportedSignAlgs =
             SignatureAndHashAlgorithm.getAlgorithmNames(algorithms);
-        negotiatedMaxFragLen = -1;
-        statusResponses = null;
 
         if (debug != null && Debug.isOn("session")) {
             System.out.println("%% Initialized:  " + this);
@@ -225,19 +220,6 @@ final class SSLSessionImpl extends ExtendedSSLSession {
 
     void setRequestedServerNames(List<SNIServerName> requestedServerNames) {
         this.requestedServerNames = new ArrayList<>(requestedServerNames);
-    }
-
-    /**
-     * Provide status response data obtained during the SSL handshake.
-     *
-     * @param responses a {@link List} of responses in binary form.
-     */
-    void setStatusResponses(List<byte[]> responses) {
-        if (responses != null && !responses.isEmpty()) {
-            statusResponses = responses;
-        } else {
-            statusResponses = Collections.emptyList();
-        }
     }
 
     /**
@@ -440,9 +422,10 @@ final class SSLSessionImpl extends ExtendedSSLSession {
         // change record of peer identity even by accident, much
         // less do it intentionally.
         //
-        if (ClientKeyExchangeService.find(cipherSuite.keyExchange.name) != null) {
+        if ((cipherSuite.keyExchange == K_KRB5) ||
+            (cipherSuite.keyExchange == K_KRB5_EXPORT)) {
             throw new SSLPeerUnverifiedException("no certificates expected"
-                        + " for " + cipherSuite.keyExchange + " cipher suites");
+                        + " for Kerberos cipher suites");
         }
         if (peerCerts == null) {
             throw new SSLPeerUnverifiedException("peer not authenticated");
@@ -481,13 +464,8 @@ final class SSLSessionImpl extends ExtendedSSLSession {
      *
      * @return array of peer X.509 certs, with the peer's own cert
      *  first in the chain, and with the "root" CA last.
-     *
-     * @deprecated This method returns the deprecated
-     *  {@code javax.security.cert.X509Certificate} type.
-     *  Use {@code getPeerCertificates()} instead.
      */
     @Override
-    @Deprecated
     public javax.security.cert.X509Certificate[] getPeerCertificateChain()
             throws SSLPeerUnverifiedException {
         //
@@ -495,9 +473,10 @@ final class SSLSessionImpl extends ExtendedSSLSession {
         // change record of peer identity even by accident, much
         // less do it intentionally.
         //
-        if (ClientKeyExchangeService.find(cipherSuite.keyExchange.name) != null) {
+        if ((cipherSuite.keyExchange == K_KRB5) ||
+            (cipherSuite.keyExchange == K_KRB5_EXPORT)) {
             throw new SSLPeerUnverifiedException("no certificates expected"
-                        + " for " + cipherSuite.keyExchange + " cipher suites");
+                        + " for Kerberos cipher suites");
         }
         if (peerCerts == null) {
             throw new SSLPeerUnverifiedException("peer not authenticated");
@@ -535,9 +514,10 @@ final class SSLSessionImpl extends ExtendedSSLSession {
          * change record of peer identity even by accident, much
          * less do it intentionally.
          */
-        if (ClientKeyExchangeService.find(cipherSuite.keyExchange.name) != null) {
+        if ((cipherSuite.keyExchange == K_KRB5) ||
+            (cipherSuite.keyExchange == K_KRB5_EXPORT)) {
             throw new SSLPeerUnverifiedException("no certificates expected"
-                        + " for " + cipherSuite.keyExchange + " cipher suites");
+                        + " for Kerberos cipher suites");
         }
         if (peerCerts != null) {
             return peerCerts.clone();
@@ -547,36 +527,12 @@ final class SSLSessionImpl extends ExtendedSSLSession {
     }
 
     /**
-     * Return a List of status responses presented by the peer.
-     * Note: This method can be used only when using certificate-based
-     * server authentication; otherwise an empty {@code List} will be returned.
-     *
-     * @return an unmodifiable {@code List} of byte arrays, each consisting
-     * of a DER-encoded OCSP response (see RFC 6960).  If no responses have
-     * been presented by the server or non-certificate based server
-     * authentication is used then an empty {@code List} is returned.
-     */
-    @Override
-    public List<byte[]> getStatusResponses() {
-        if (statusResponses == null || statusResponses.isEmpty()) {
-            return Collections.emptyList();
-        } else {
-            // Clone both the list and the contents
-            List<byte[]> responses = new ArrayList<>(statusResponses.size());
-            for (byte[] respBytes : statusResponses) {
-                responses.add(respBytes.clone());
-            }
-            return Collections.unmodifiableList(responses);
-        }
-    }
-
-    /**
      * Returns the identity of the peer which was established as part of
      * defining the session.
      *
      * @return the peer's principal. Returns an X500Principal of the
      * end-entity certificate for X509-based cipher suites, and
-     * Principal for Kerberos cipher suites, etc.
+     * Principal for Kerberos cipher suites.
      *
      * @throws SSLPeerUnverifiedException if the peer's identity has not
      *          been verified
@@ -585,10 +541,12 @@ final class SSLSessionImpl extends ExtendedSSLSession {
     public Principal getPeerPrincipal()
                 throws SSLPeerUnverifiedException
     {
-        if (ClientKeyExchangeService.find(cipherSuite.keyExchange.name) != null) {
+        if ((cipherSuite.keyExchange == K_KRB5) ||
+            (cipherSuite.keyExchange == K_KRB5_EXPORT)) {
             if (peerPrincipal == null) {
                 throw new SSLPeerUnverifiedException("peer not authenticated");
             } else {
+                // Eliminate dependency on KerberosPrincipal
                 return peerPrincipal;
             }
         }
@@ -603,13 +561,15 @@ final class SSLSessionImpl extends ExtendedSSLSession {
      *
      * @return the principal sent to the peer. Returns an X500Principal
      * of the end-entity certificate for X509-based cipher suites, and
-     * Principal for Kerberos cipher suites, etc. If no principal was
+     * Principal for Kerberos cipher suites. If no principal was
      * sent, then null is returned.
      */
     @Override
     public Principal getLocalPrincipal() {
 
-        if (ClientKeyExchangeService.find(cipherSuite.keyExchange.name) != null) {
+        if ((cipherSuite.keyExchange == K_KRB5) ||
+            (cipherSuite.keyExchange == K_KRB5_EXPORT)) {
+                // Eliminate dependency on KerberosPrincipal
                 return (localPrincipal == null ? null : localPrincipal);
         }
         return (localCerts == null ? null :
@@ -677,7 +637,7 @@ final class SSLSessionImpl extends ExtendedSSLSession {
      * no connections will be able to rejoin this session.
      */
     @Override
-    public synchronized void invalidate() {
+    synchronized public void invalidate() {
         //
         // Can't invalidate the NULL session -- this would be
         // attempted when we get a handshaking error on a brand
@@ -820,30 +780,8 @@ final class SSLSessionImpl extends ExtendedSSLSession {
      */
     @Override
     public synchronized int getPacketBufferSize() {
-        // Use the bigger packet size calculated from maximumPacketSize
-        // and negotiatedMaxFragLen.
-        int packetSize = 0;
-        if (negotiatedMaxFragLen > 0) {
-            packetSize = cipherSuite.calculatePacketSize(
-                    negotiatedMaxFragLen, protocolVersion,
-                    protocolVersion.isDTLSProtocol());
-        }
-
-        if (maximumPacketSize > 0) {
-            return (maximumPacketSize > packetSize) ?
-                    maximumPacketSize : packetSize;
-        }
-
-        if (packetSize != 0) {
-           return packetSize;
-        }
-
-        if (protocolVersion.isDTLSProtocol()) {
-            return DTLSRecord.maxRecordSize;
-        } else {
-            return acceptLargeFragments ?
-                    SSLRecord.maxLargeRecordSize : SSLRecord.maxRecordSize;
-        }
+        return acceptLargeFragments ?
+                Record.maxLargeRecordSize : Record.maxRecordSize;
     }
 
     /**
@@ -852,64 +790,7 @@ final class SSLSessionImpl extends ExtendedSSLSession {
      */
     @Override
     public synchronized int getApplicationBufferSize() {
-        // Use the bigger fragment size calculated from maximumPacketSize
-        // and negotiatedMaxFragLen.
-        int fragmentSize = 0;
-        if (maximumPacketSize > 0) {
-            fragmentSize = cipherSuite.calculateFragSize(
-                    maximumPacketSize, protocolVersion,
-                    protocolVersion.isDTLSProtocol());
-        }
-
-        if (negotiatedMaxFragLen > 0) {
-            return (negotiatedMaxFragLen > fragmentSize) ?
-                    negotiatedMaxFragLen : fragmentSize;
-        }
-
-        if (fragmentSize != 0) {
-            return fragmentSize;
-        }
-
-        if (protocolVersion.isDTLSProtocol()) {
-            return Record.maxDataSize;
-        } else {
-            int maxPacketSize = acceptLargeFragments ?
-                        SSLRecord.maxLargeRecordSize : SSLRecord.maxRecordSize;
-            return (maxPacketSize - SSLRecord.headerSize);
-        }
-    }
-
-    /**
-     * Sets the negotiated maximum fragment length, as specified by the
-     * max_fragment_length ClientHello extension in RFC 6066.
-     *
-     * @param  negotiatedMaxFragLen
-     *         the negotiated maximum fragment length, or {@code -1} if
-     *         no such length has been negotiated.
-     */
-    synchronized void setNegotiatedMaxFragSize(
-            int negotiatedMaxFragLen) {
-
-        this.negotiatedMaxFragLen = negotiatedMaxFragLen;
-    }
-
-    /**
-     * Get the negotiated maximum fragment length, as specified by the
-     * max_fragment_length ClientHello extension in RFC 6066.
-     *
-     * @return the negotiated maximum fragment length, or {@code -1} if
-     *         no such length has been negotiated.
-     */
-    synchronized int getNegotiatedMaxFragSize() {
-        return negotiatedMaxFragLen;
-    }
-
-    synchronized void setMaximumPacketSize(int maximumPacketSize) {
-        this.maximumPacketSize = maximumPacketSize;
-    }
-
-    synchronized int getMaximumPacketSize() {
-        return maximumPacketSize;
+        return getPacketBufferSize() - Record.headerSize;
     }
 
     /**
@@ -960,6 +841,17 @@ final class SSLSessionImpl extends ExtendedSSLSession {
             + "]";
     }
 
+    /**
+     * When SSL sessions are finalized, all values bound to
+     * them are removed.
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        String[] names = getValueNames();
+        for (int i = 0; i < names.length; i++) {
+            removeValue(names[i]);
+        }
+    }
 }
 
 

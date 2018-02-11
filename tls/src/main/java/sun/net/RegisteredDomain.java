@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,14 +27,11 @@ package sun.net;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /*
- * WARNING: This class may contain out-of-date information. It should be
- * updated or replaced with an appropriate implementation. See
- * sun.security.util.RegisteredDomain for more information.
- *
  * The naming tables listed below were gathered from publicly available data such as
  * the subdomain registration websites listed for each top-level domain by the Internet
  * Assigned Numbers Authority and the website of the Internet Corporation for Assigned Names
@@ -44,7 +41,7 @@ import java.util.Set;
 public class RegisteredDomain {
 
 // XX.AA
-private static Set<String> top1Set = new HashSet<>(Arrays.asList("asia", "biz", "cat", "coop",
+private static Set<String> top1Set = new HashSet<String>(Arrays.asList("asia", "biz", "cat", "coop",
         "edu", "info", "gov", "jobs", "travel", "am", "aq", "ax", "cc", "cf", "cg", "ch", "cv", "cz",
         "de", "dj", "dk", "fm", "fo", "ga", "gd", "gf", "gl", "gm", "gq", "gs", "gw", "hm",
         "li", "lu", "md", "mh", "mil", "mobi", "mq", "ms", "ms", "ne", "nl", "nu", "si",
@@ -57,38 +54,38 @@ private static Set<String> top1Set = new HashSet<>(Arrays.asList("asia", "biz", 
         /* tw */ "xn--kprw13d",         /* sg tamil */  "xn--clchc0ea0b2g2a9gcd"));
 
 // common pattern: XX.AA or XX.GOV.AA
-private static Set<String> top2Set = new HashSet<>(Arrays.asList("as", "bf", "cd", "cx",
+private static Set<String> top2Set = new HashSet<String>(Arrays.asList("as", "bf", "cd", "cx",
         "ie", "lt", "mr", "tl"));
 
 // common pattern: XX.AA or XX.COM.AA or XX.EDU.AA or XX.NET.AA or XX.ORG.AA or XX.GOV.AA
-private static Set<String> top4Set = new HashSet<>(Arrays.asList("af", "bm", "bs", "bt",
+private static Set<String> top4Set = new HashSet<String>(Arrays.asList("af", "bm", "bs", "bt",
         "bz", "dm", "ky", "lb", "lr", "mo", "sc", "sl", "ws"));
 
 // AA or less than 3 other XX.BB.AA possible matches
-private static Set<String> top3Set = new HashSet<>(Arrays.asList("ad", "aw", "be", "bw",
+private static Set<String> top3Set = new HashSet<String>(Arrays.asList("ad", "aw", "be", "bw",
         "cl", "fi", "int", "io", "mc"));
 
 // AA.UK exceptions
-private static Set<String> ukSet = new HashSet<>(Arrays.asList( "bl", "british-library",
+private static Set<String> ukSet = new HashSet<String>(Arrays.asList( "bl", "british-library",
         "jet", "nhs", "nls", "parliament", "mod", "police"));
 
 // AA.AR exceptions
-private static Set<String> arSet = new HashSet<>(Arrays.asList( "argentina", "educ",
+private static Set<String> arSet = new HashSet<String>(Arrays.asList( "argentina", "educ",
         "gobiernoelectronico", "nic", "promocion", "retina", "uba"));
 
 // AA.OM exceptions
-private static Set<String> omSet = new HashSet<>(Arrays.asList("mediaphone", "nawrastelecom",
+private static Set<String> omSet = new HashSet<String>(Arrays.asList("mediaphone", "nawrastelecom",
         "nawras", "omanmobile", "omanpost", "omantel", "rakpetroleum", "siemens", "songfest",
         "statecouncil", "shura", "peie", "omran", "omnic", "omanet", "oman", "muriya", "kom"));
 
 // any XX.BB.AA
-private static Set<String> top5Set = new HashSet<>(Arrays.asList("au", "arpa", "bd", "bn", "ck",
+private static Set<String> top5Set = new HashSet<String>(Arrays.asList("au", "arpa", "bd", "bn", "ck",
          "cy", "er", "et", "fj", "fk", "gt", "gu", "il", "jm", "ke", "kh", "kw",
          "mm", "mt", "mz", "ni", "np", "nz", "pg", "sb", "sv", "tz", "uy", "ve", "ye",
          "za", "zm", "zw"));
 
 // XX.CC.BB.JP
-private static Set<String> jpSet = new HashSet<>(Arrays.asList("aichi", "akita", "aomori",
+private static Set<String> jpSet = new HashSet<String>(Arrays.asList("aichi", "akita", "aomori",
         "chiba", "ehime", "fukui", "fukuoka", "fukushima", "gifu", "gunma", "hiroshima", "hokkaido",
         "hyogo", "ibaraki", "ishikawa", "iwate", "kagawa", "kagoshima", "kanagawa", "kawasaki",
         "kitakyushu", "kobe", "kochi", "kumamoto", "kyoto", "mie", "miyagi", "miyazaki", "nagano",
@@ -97,7 +94,7 @@ private static Set<String> jpSet = new HashSet<>(Arrays.asList("aichi", "akita",
         "tokyo", "tottori", "toyama", "wakayama", "yamagata", "yamaguchi", "yamanashi", "yokohama"));
 
 // CC.BB.JP exceptions
-private static Set<String> jp2Set = new HashSet<>(Arrays.asList("metro.tokyo.jp",
+private static Set<String> jp2Set = new HashSet<String>(Arrays.asList("metro.tokyo.jp",
         "pref.aichi.jp", "pref.akita.jp", "pref.aomori.jp", "pref.chiba.jp", "pref.ehime.jp",
         "pref.fukui.jp", "pref.fukuoka.jp", "pref.fukushima.jp", "pref.gifu.jp", "pref.gunma.jp",
         "pref.hiroshima.jp", "pref.hokkaido.jp", "pref.hyogo.jp", "pref.ibaraki.jp", "pref.ishikawa.jp",
@@ -112,13 +109,13 @@ private static Set<String> jp2Set = new HashSet<>(Arrays.asList("metro.tokyo.jp"
         "city.okayama.jp", "city.osaka.jp", "city.sagamihara.jp", "city.saitama.jp", "city.sapporo.jp", "city.sendai.jp",
         "city.shizuoka.jp", "city.yokohama.jp"));
 
-private static Set<String>  usStateSet = new HashSet<>(Arrays.asList("ak",
+private static Set<String>  usStateSet = new HashSet<String>(Arrays.asList("ak",
                 "al", "ar", "as", "az", "ca", "co", "ct", "dc", "de", "fl", "ga", "gu", "hi", "ia",
                 "id", "il", "in", "ks", "ky", "la", "ma", "md", "me", "mi", "mn", "mo", "ms", "mt",
                 "nc", "nd", "ne", "nh", "nj", "nm", "nv", "ny", "oh", "ok", "or", "pa", "pr", "ri",
                 "sc", "sd", "tn", "tx", "ut", "vi", "vt", "va", "wa", "wi", "wv", "wy"));
 
-private static Set<String>  usSubStateSet = new HashSet<>(Arrays.asList("state",
+private static Set<String>  usSubStateSet = new HashSet<String>(Arrays.asList("state",
                 "lib", "k12", "cc", "tec", "gen", "cog", "mus", "dst"));
 
 private static Map<String,Set<String>> topMap = new HashMap<>();
@@ -128,9 +125,9 @@ static {
     /*
      * XX.AA or XX.BB.AA
      */
-    topMap.put("ac", new HashSet<>(Arrays.asList("com", "co", "edu", "gov", "net", "mil", "org")));
-    topMap.put("ae", new HashSet<>(Arrays.asList("co", "net", "org", "sch", "ac", "gov", "mil")));
-    topMap.put("aero", new HashSet<>(Arrays.asList("accident-investigation",
+    topMap.put("ac", new HashSet<String>(Arrays.asList("com", "co", "edu", "gov", "net", "mil", "org")));
+    topMap.put("ae", new HashSet<String>(Arrays.asList("co", "net", "org", "sch", "ac", "gov", "mil")));
+    topMap.put("aero", new HashSet<String>(Arrays.asList("accident-investigation",
                 "accident-prevention", "aerobatic", "aeroclub", "aerodrome", "agents", "aircraft",
                 "airline", "airport", "air-surveillance", "airtraffic", "air-traffic-control",
                 "ambulance", "amusement", "association", "author", "ballooning", "broker", "caa",
@@ -145,102 +142,102 @@ static {
                 "recreation", "repbody", "res", "research", "rotorcraft", "safety", "scientist",
                 "services", "show", "skydiving", "software", "student", "taxi", "trader", "trading",
                 "trainer", "union", "workinggroup", "works" )));
-    topMap.put( "ag", new HashSet<>(Arrays.asList("com", "org", "net", "co", "nom")));
-    topMap.put( "ai", new HashSet<>(Arrays.asList("off", "com", "net", "org")));
-    topMap.put( "al", new HashSet<>(Arrays.asList("com", "edu", "gov", "mil", "net", "org")));
-    topMap.put( "an", new HashSet<>(Arrays.asList("com")));
-    topMap.put( "ao", new HashSet<>(Arrays.asList("ed", "gv", "og", "co", "pb", "it")));
-    topMap.put( "at", new HashSet<>(Arrays.asList("ac", "co", "gv", "or", "biz", "info", "priv")));
-    topMap.put( "az", new HashSet<>(Arrays.asList("com", "net", "int", "gov", "org", "edu", "info",
+    topMap.put( "ag", new HashSet<String>(Arrays.asList("com", "org", "net", "co", "nom")));
+    topMap.put( "ai", new HashSet<String>(Arrays.asList("off", "com", "net", "org")));
+    topMap.put( "al", new HashSet<String>(Arrays.asList("com", "edu", "gov", "mil", "net", "org")));
+    topMap.put( "an", new HashSet<String>(Arrays.asList("com")));
+    topMap.put( "ao", new HashSet<String>(Arrays.asList("ed", "gv", "og", "co", "pb", "it")));
+    topMap.put( "at", new HashSet<String>(Arrays.asList("ac", "co", "gv", "or", "biz", "info", "priv")));
+    topMap.put( "az", new HashSet<String>(Arrays.asList("com", "net", "int", "gov", "org", "edu", "info",
                 "pp", "mil", "name", "biz")));
-    topMap.put( "ba", new HashSet<>(Arrays.asList("org", "net", "edu", "gov", "mil", "unbi",
+    topMap.put( "ba", new HashSet<String>(Arrays.asList("org", "net", "edu", "gov", "mil", "unbi",
                 "unmo", "unsa", "untz", "unze", "co", "com", "rs")));
-    topMap.put( "bb", new HashSet<>(Arrays.asList("biz", "com", "edu", "gov", "info", "net", "org",
+    topMap.put( "bb", new HashSet<String>(Arrays.asList("biz", "com", "edu", "gov", "info", "net", "org",
                 "store")));
-    topMap.put( "bg", new HashSet<>(Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+    topMap.put( "bg", new HashSet<String>(Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
                 "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1",
                 "2", "3", "4", "5", "6", "7", "8", "9")));
-    topMap.put( "bh", new HashSet<>(Arrays.asList("com", "info", "cc", "edu", "biz", "net",
+    topMap.put( "bh", new HashSet<String>(Arrays.asList("com", "info", "cc", "edu", "biz", "net",
                 "org", "gov")));
-    topMap.put( "bi", new HashSet<>(Arrays.asList("co", "com", "edu", "gov", "info", "or", "org")));
-    topMap.put( "bj", new HashSet<>(Arrays.asList("asso", "barreau", "com", "edu", "gouv", "gov", "mil")));
-    topMap.put( "bo", new HashSet<>(Arrays.asList("com", "edu", "gov", "gob", "int", "org", "net",
+    topMap.put( "bi", new HashSet<String>(Arrays.asList("co", "com", "edu", "gov", "info", "or", "org")));
+    topMap.put( "bj", new HashSet<String>(Arrays.asList("asso", "barreau", "com", "edu", "gouv", "gov", "mil")));
+    topMap.put( "bo", new HashSet<String>(Arrays.asList("com", "edu", "gov", "gob", "int", "org", "net",
                  "mil", "tv")));
-    topMap.put( "br", new HashSet<>(Arrays.asList("adm", "adv", "agr", "am", "arq", "art", "ato",
+    topMap.put( "br", new HashSet<String>(Arrays.asList("adm", "adv", "agr", "am", "arq", "art", "ato",
                 "b", "bio", "blog", "bmd", "cim", "cng", "cnt", "com", "coop", "ecn", "edu", "emp", "eng",
                 "esp", "etc", "eti", "far", "flog", "fm", "fnd", "fot", "fst", "g12", "ggf", "gov",
                 "imb", "ind", "inf", "jor", "jus", "lel", "mat", "med", "mil", "mus", "net", "nom",
                 "not", "ntr", "odo", "org", "ppg", "pro", "psc", "psi", "qsl", "radio", "rec", "slg",
                 "srv", "taxi", "teo", "tmp", "trd", "tur", "tv", "vet", "vlog", "wiki", "zlg")));
-    topMap.put( "bw", new HashSet<>(Arrays.asList("co", "gov", "org")));
-    topMap.put( "by", new HashSet<>(Arrays.asList("gov", "mil", "com", "of")));
-    topMap.put( "ca", new HashSet<>(Arrays.asList("ab", "bc", "mb", "nb", "nf",
+    topMap.put( "bw", new HashSet<String>(Arrays.asList("co", "gov", "org")));
+    topMap.put( "by", new HashSet<String>(Arrays.asList("gov", "mil", "com", "of")));
+    topMap.put( "ca", new HashSet<String>(Arrays.asList("ab", "bc", "mb", "nb", "nf",
                 "nl", "ns", "nt", "nu", "on", "pe", "qc", "sk", "yk", "gc")));
-    topMap.put( "ci", new HashSet<>(Arrays.asList("org", "or", "com", "co", "edu",
+    topMap.put( "ci", new HashSet<String>(Arrays.asList("org", "or", "com", "co", "edu",
                 "ed", "ac", "net", "go", "asso", "xn--aroport-bya", "int",
                 "presse", "md", "gouv")));
-    topMap.put( "com", new HashSet<>(Arrays.asList("ad", "ar", "br", "cn", "de", "eu", "gb",
+    topMap.put( "com", new HashSet<String>(Arrays.asList("ad", "ar", "br", "cn", "de", "eu", "gb",
                 "gr", "hu", "jpn", "kr", "no", "qc", "ru", "sa", "se", "uk", "us", "uy", "za")));
-    topMap.put( "cm", new HashSet<>(Arrays.asList("co", "com", "gov", "net")));
-    topMap.put( "cn", new HashSet<>(Arrays.asList("ac", "com", "edu", "gov", "net",
+    topMap.put( "cm", new HashSet<String>(Arrays.asList("co", "com", "gov", "net")));
+    topMap.put( "cn", new HashSet<String>(Arrays.asList("ac", "com", "edu", "gov", "net",
                 "org", "mil", "xn--55qx5d", "xn--io0a7i",
                 "ah", "bj", "cq", "fj", "gd", "gs", "gz", "gx",
                 "ha", "hb", "he", "hi", "hl", "hn", "jl", "js", "jx", "ln", "nm", "nx", "qh",
                 "sc", "sd", "sh", "sn", "sx", "tj", "xj", "xz", "yn", "zj", "hk", "mo", "tw")));
-    topMap.put( "co", new HashSet<>(Arrays.asList("arts", "com", "edu", "firm", "gov", "info",
+    topMap.put( "co", new HashSet<String>(Arrays.asList("arts", "com", "edu", "firm", "gov", "info",
                 "int", "mil", "net", "nom", "org", "rec", "web")));
-    topMap.put( "cr", new HashSet<>(Arrays.asList("ac", "co", "ed", "fi", "go", "or", "sa")));
-    topMap.put( "cu", new HashSet<>(Arrays.asList("com", "edu", "org", "net", "gov", "inf")));
-    topMap.put( "do", new HashSet<>(Arrays.asList("com", "edu", "org", "net", "gov", "gob",
+    topMap.put( "cr", new HashSet<String>(Arrays.asList("ac", "co", "ed", "fi", "go", "or", "sa")));
+    topMap.put( "cu", new HashSet<String>(Arrays.asList("com", "edu", "org", "net", "gov", "inf")));
+    topMap.put( "do", new HashSet<String>(Arrays.asList("com", "edu", "org", "net", "gov", "gob",
                 "web", "art", "sld", "mil")));
-    topMap.put( "dz", new HashSet<>(Arrays.asList("com", "org", "net", "gov", "edu", "asso",
+    topMap.put( "dz", new HashSet<String>(Arrays.asList("com", "org", "net", "gov", "edu", "asso",
                  "pol", "art")));
-    topMap.put( "ec", new HashSet<>(Arrays.asList("com", "info", "net", "fin", "k12", "med",
+    topMap.put( "ec", new HashSet<String>(Arrays.asList("com", "info", "net", "fin", "k12", "med",
                 "pro", "org", "edu", "gov", "gob", "mil")));
-    topMap.put( "ee", new HashSet<>(Arrays.asList("edu", "gov", "riik", "lib", "med", "com",
+    topMap.put( "ee", new HashSet<String>(Arrays.asList("edu", "gov", "riik", "lib", "med", "com",
                 "pri", "aip", "org", "fie")));
-    topMap.put( "eg", new HashSet<>(Arrays.asList("com", "edu", "eun", "gov", "mil", "name",
+    topMap.put( "eg", new HashSet<String>(Arrays.asList("com", "edu", "eun", "gov", "mil", "name",
                 "net", "org", "sci")));
-    topMap.put( "es", new HashSet<>(Arrays.asList("com", "nom", "org", "gob", "edu")));
-    topMap.put( "eu", new HashSet<>(Arrays.asList("europa")));
-    topMap.put( "fr", new HashSet<>(Arrays.asList("com", "asso", "nom", "prd", "presse",
+    topMap.put( "es", new HashSet<String>(Arrays.asList("com", "nom", "org", "gob", "edu")));
+    topMap.put( "eu", new HashSet<String>(Arrays.asList("europa")));
+    topMap.put( "fr", new HashSet<String>(Arrays.asList("com", "asso", "nom", "prd", "presse",
                 "tm", "aeroport", "assedic", "avocat", "avoues", "cci", "chambagri",
                 "chirurgiens-dentistes", "experts-comptables", "geometre-expert", "gouv", "greta",
                 "huissier-justice", "medecin", "notaires", "pharmacien", "port", "veterinaire")));
-    topMap.put( "ge", new HashSet<>(Arrays.asList("com", "edu", "gov", "org", "mil", "net", "pvt")));
-    topMap.put( "gg", new HashSet<>(Arrays.asList("co", "org", "net", "sch", "gov")));
-    topMap.put( "gh", new HashSet<>(Arrays.asList("com", "edu", "gov", "org", "mil")));
-    topMap.put( "gi", new HashSet<>(Arrays.asList("com", "ltd", "gov", "mod", "edu", "org")));
-    topMap.put( "gn", new HashSet<>(Arrays.asList("ac", "com", "edu", "gov", "org", "net")));
-    topMap.put( "gp", new HashSet<>(Arrays.asList("com", "net", "mobi", "edu", "org", "asso")));
-    topMap.put( "gr", new HashSet<>(Arrays.asList("com", "co", "net", "edu", "org", "gov",
+    topMap.put( "ge", new HashSet<String>(Arrays.asList("com", "edu", "gov", "org", "mil", "net", "pvt")));
+    topMap.put( "gg", new HashSet<String>(Arrays.asList("co", "org", "net", "sch", "gov")));
+    topMap.put( "gh", new HashSet<String>(Arrays.asList("com", "edu", "gov", "org", "mil")));
+    topMap.put( "gi", new HashSet<String>(Arrays.asList("com", "ltd", "gov", "mod", "edu", "org")));
+    topMap.put( "gn", new HashSet<String>(Arrays.asList("ac", "com", "edu", "gov", "org", "net")));
+    topMap.put( "gp", new HashSet<String>(Arrays.asList("com", "net", "mobi", "edu", "org", "asso")));
+    topMap.put( "gr", new HashSet<String>(Arrays.asList("com", "co", "net", "edu", "org", "gov",
                 "mil", "mod", "sch")));
-    topMap.put( "gy", new HashSet<>(Arrays.asList("co", "com", "net", "org", "edu", "gov")));
-    topMap.put( "hk", new HashSet<>(Arrays.asList("com", "edu", "gov", "idv", "net", "org",
+    topMap.put( "gy", new HashSet<String>(Arrays.asList("co", "com", "net", "org", "edu", "gov")));
+    topMap.put( "hk", new HashSet<String>(Arrays.asList("com", "edu", "gov", "idv", "net", "org",
                 /* com */ "xn--55qx5d", /* edu */ "xn--wcvs22d", /* gov */"xn--mxtq1m",
                 /* idv */ "xn--gmqw5a", /* net */ "xn--od0alg", /*org*/ "xn--uc0atv")));
-    topMap.put( /* hk */  "xn--j6w193g", new HashSet<>(Arrays.asList(
+    topMap.put( /* hk */  "xn--j6w193g", new HashSet<String>(Arrays.asList(
                 /* com */ "xn--55qx5d", /* edu */ "xn--wcvs22d", /* gov */"xn--mxtq1m",
                 /* idv */ "xn--gmqw5a", /* net */ "xn--od0alg", /*org*/ "xn--uc0atv")));
-    topMap.put( "hn", new HashSet<>(Arrays.asList("com", "edu", "org", "net", "mil", "gob")));
-    topMap.put( "hr", new HashSet<>(Arrays.asList("iz.hr", "from.hr", "name.hr", "com.hr")));
-    topMap.put( "ht", new HashSet<>(Arrays.asList("com", "shop", "firm", "info", "adult",
+    topMap.put( "hn", new HashSet<String>(Arrays.asList("com", "edu", "org", "net", "mil", "gob")));
+    topMap.put( "hr", new HashSet<String>(Arrays.asList("iz.hr", "from.hr", "name.hr", "com.hr")));
+    topMap.put( "ht", new HashSet<String>(Arrays.asList("com", "shop", "firm", "info", "adult",
                 "net", "pro", "org", "med", "art", "coop", "pol", "asso", "edu", "rel", "gouv", "perso")));
-    topMap.put( "hu", new HashSet<>(Arrays.asList("co", "info", "org", "priv", "sport", "tm",
+    topMap.put( "hu", new HashSet<String>(Arrays.asList("co", "info", "org", "priv", "sport", "tm",
                 "2000", "agrar", "bolt", "casino", "city", "erotica", "erotika", "film", "forum",
                 "games", "hotel", "ingatlan", "jogasz", "konyvelo", "lakas", "media", "news", "reklam",
                 "sex", "shop", "suli", "szex", "tozsde", "utazas", "video")));
-    topMap.put( "id", new HashSet<>(Arrays.asList("ac", "co", "go", "mil", "net", "or", "sch",
+    topMap.put( "id", new HashSet<String>(Arrays.asList("ac", "co", "go", "mil", "net", "or", "sch",
                 "web")));
-    topMap.put( "im", new HashSet<>(Arrays.asList("co.im", "com", "net.im", "gov.im", "org.im",
+    topMap.put( "im", new HashSet<String>(Arrays.asList("co.im", "com", "net.im", "gov.im", "org.im",
                 "ac.im")));
-    topMap.put( "in", new HashSet<>(Arrays.asList("co", "firm", "ernet", "net", "org", "gen", "ind",
+    topMap.put( "in", new HashSet<String>(Arrays.asList("co", "firm", "ernet", "net", "org", "gen", "ind",
                 "nic", "ac", "edu", "res", "gov", "mil")));
-    topMap.put( "iq", new HashSet<>(Arrays.asList("gov", "edu", "mil", "com", "org", "net" )));
-    topMap.put( "ir", new HashSet<>(Arrays.asList("ac", "co", "gov", "id", "net", "org", "sch"
+    topMap.put( "iq", new HashSet<String>(Arrays.asList("gov", "edu", "mil", "com", "org", "net" )));
+    topMap.put( "ir", new HashSet<String>(Arrays.asList("ac", "co", "gov", "id", "net", "org", "sch"
                 )));
-    topMap.put( "is", new HashSet<>(Arrays.asList("net", "com", "edu", "gov", "org", "int")));
-    topMap.put( "it", new HashSet<>(Arrays.asList("gov", "edu", "agrigento", "ag", "alessandria",
+    topMap.put( "is", new HashSet<String>(Arrays.asList("net", "com", "edu", "gov", "org", "int")));
+    topMap.put( "it", new HashSet<String>(Arrays.asList("gov", "edu", "agrigento", "ag", "alessandria",
                 "al", "ancona", "an", "aosta", "aoste", "ao", "arezzo", "ar", "ascoli-piceno",
                 "ascolipiceno", "ap", "asti", "at", "avellino", "av", "bari", "ba",
                 "andria-barletta-trani", "andriabarlettatrani", "trani-barletta-andria",
@@ -276,49 +273,49 @@ static {
                 "udine", "ud", "varese", "va", "venezia", "venice", "ve", "verbania", "vb",
                 "vercelli", "vc", "verona", "vr", "vibo-valentia", "vibovalentia", "vv", "vicenza",
                 "vi", "viterbo", "vt")));
-    topMap.put( "je", new HashSet<>(Arrays.asList("co", "org", "net", "sch", "gov")));
-    topMap.put( "jo", new HashSet<>(Arrays.asList("com", "org", "net", "edu", "sch",
+    topMap.put( "je", new HashSet<String>(Arrays.asList("co", "org", "net", "sch", "gov")));
+    topMap.put( "jo", new HashSet<String>(Arrays.asList("com", "org", "net", "edu", "sch",
                 "gov", "mil", "name")));
-    topMap.put( "jp", new HashSet<>(Arrays.asList("ac", "ad", "co", "ed", "go", "gr", "lg",
+    topMap.put( "jp", new HashSet<String>(Arrays.asList("ac", "ad", "co", "ed", "go", "gr", "lg",
                 "ne", "or")));
-    topMap.put( "kg", new HashSet<>(Arrays.asList("org", "net", "com", "edu", "gov", "mil")));
-    topMap.put( "ki", new HashSet<>(Arrays.asList("edu", "biz", "net", "org", "gov",
+    topMap.put( "kg", new HashSet<String>(Arrays.asList("org", "net", "com", "edu", "gov", "mil")));
+    topMap.put( "ki", new HashSet<String>(Arrays.asList("edu", "biz", "net", "org", "gov",
                  "info", "com")));
-    topMap.put( "km", new HashSet<>(Arrays.asList("org", "nom", "gov", "prd", "tm", "edu",
+    topMap.put( "km", new HashSet<String>(Arrays.asList("org", "nom", "gov", "prd", "tm", "edu",
                 "mil", "ass", "com", "coop", "asso", "presse", "medecin", "notaires", "pharmaciens",
                 "veterinaire", "gouv")));
-    topMap.put( "kn", new HashSet<>(Arrays.asList("net", "org", "edu", "gov")));
-    topMap.put( "kp", new HashSet<>(Arrays.asList("com", "edu", "gov", "org", "rep", "tra")));
-    topMap.put( "kr", new HashSet<>(Arrays.asList("ac", "co", "es", "go", "hs", "kg", "mil",
+    topMap.put( "kn", new HashSet<String>(Arrays.asList("net", "org", "edu", "gov")));
+    topMap.put( "kp", new HashSet<String>(Arrays.asList("com", "edu", "gov", "org", "rep", "tra")));
+    topMap.put( "kr", new HashSet<String>(Arrays.asList("ac", "co", "es", "go", "hs", "kg", "mil",
                 "ms", "ne", "or", "pe", "re", "sc", "busan", "chungbuk", "chungnam", "daegu",
                 "daejeon", "gangwon", "gwangju", "gyeongbuk", "gyeonggi", "gyeongnam", "incheon",
                 "jeju", "jeonbuk", "jeonnam", "seoul", "ulsan")));
-    topMap.put( "kz", new HashSet<>(Arrays.asList("org", "edu", "net", "gov", "mil", "com")));
-    topMap.put( "la", new HashSet<>(Arrays.asList("int", "net", "info", "edu", "gov", "per",
+    topMap.put( "kz", new HashSet<String>(Arrays.asList("org", "edu", "net", "gov", "mil", "com")));
+    topMap.put( "la", new HashSet<String>(Arrays.asList("int", "net", "info", "edu", "gov", "per",
                 "com", "org", "c")));
-    topMap.put( "lc", new HashSet<>(Arrays.asList("com", "net", "co", "org", "edu", "gov",
+    topMap.put( "lc", new HashSet<String>(Arrays.asList("com", "net", "co", "org", "edu", "gov",
                 "l.lc", "p.lc")));
-    topMap.put( "lk", new HashSet<>(Arrays.asList("gov", "sch", "net", "int", "com", "org",
+    topMap.put( "lk", new HashSet<String>(Arrays.asList("gov", "sch", "net", "int", "com", "org",
                 "edu", "ngo", "soc", "web", "ltd", "assn", "grp", "hotel")));
-    topMap.put( "ls", new HashSet<>(Arrays.asList("co", "gov", "ac", "org")));
-    topMap.put( "lv", new HashSet<>(Arrays.asList("com", "edu", "gov", "org", "mil",
+    topMap.put( "ls", new HashSet<String>(Arrays.asList("co", "gov", "ac", "org")));
+    topMap.put( "lv", new HashSet<String>(Arrays.asList("com", "edu", "gov", "org", "mil",
                 "id", "net", "asn", "conf")));
-    topMap.put( "ly", new HashSet<>(Arrays.asList("com", "net", "gov", "plc", "edu", "sch",
+    topMap.put( "ly", new HashSet<String>(Arrays.asList("com", "net", "gov", "plc", "edu", "sch",
                 "med", "org", "id")));
-    topMap.put( "ma", new HashSet<>(Arrays.asList("co", "net", "gov", "org", "ac", "press")));
-    topMap.put( "me", new HashSet<>(Arrays.asList("co", "net", "org", "edu", "ac", "gov",
+    topMap.put( "ma", new HashSet<String>(Arrays.asList("co", "net", "gov", "org", "ac", "press")));
+    topMap.put( "me", new HashSet<String>(Arrays.asList("co", "net", "org", "edu", "ac", "gov",
                 "its", "priv")));
-    topMap.put( "mg", new HashSet<>(Arrays.asList("org", "nom", "gov", "prd", "tm",
+    topMap.put( "mg", new HashSet<String>(Arrays.asList("org", "nom", "gov", "prd", "tm",
                 "edu", "mil", "com")));
-    topMap.put( "mk", new HashSet<>(Arrays.asList("com", "org", "net", "edu", "gov", "inf",
+    topMap.put( "mk", new HashSet<String>(Arrays.asList("com", "org", "net", "edu", "gov", "inf",
                 "name", "pro")));
-    topMap.put( "ml", new HashSet<>(Arrays.asList("com", "edu", "gouv", "gov", "net",
+    topMap.put( "ml", new HashSet<String>(Arrays.asList("com", "edu", "gouv", "gov", "net",
                 "org", "presse")));
-    topMap.put( "mn", new HashSet<>(Arrays.asList("gov", "edu", "org")));
-    topMap.put( "mp", new HashSet<>(Arrays.asList("gov", "co", "org")));
-    topMap.put( "mu", new HashSet<>(Arrays.asList("com", "net", "org", "gov", "ac",
+    topMap.put( "mn", new HashSet<String>(Arrays.asList("gov", "edu", "org")));
+    topMap.put( "mp", new HashSet<String>(Arrays.asList("gov", "co", "org")));
+    topMap.put( "mu", new HashSet<String>(Arrays.asList("com", "net", "org", "gov", "ac",
                 "co", "or")));
-    topMap.put( "museum", new HashSet<>(Arrays.asList("academy", "agriculture", "air",
+    topMap.put( "museum", new HashSet<String>(Arrays.asList("academy", "agriculture", "air",
                 "airguard", "alabama", "alaska", "amber", "ambulance", "american", "americana",
                 "americanantiques", "americanart", "amsterdam", "and", "annefrank", "anthro",
                 "anthropology", "antiques", "aquarium", "arboretum", "archaeological", "archaeology",
@@ -402,22 +399,22 @@ static {
                 "watch-and-clock", "western", "westfalen", "whaling", "wildlife", "williamsburg",
                 "windmill", "workshop", "york", "yorkshire", "yosemite", "youth", "zoological",
                 "zoology", "xn--9dbhblg6di", "xn--h1aegh")));
-    topMap.put( "mv", new HashSet<>(Arrays.asList("aero", "biz", "com", "coop", "edu", "gov",
+    topMap.put( "mv", new HashSet<String>(Arrays.asList("aero", "biz", "com", "coop", "edu", "gov",
                 "info", "int", "mil", "museum", "name", "net", "org", "pro")));
-    topMap.put( "mw", new HashSet<>(Arrays.asList("ac", "biz", "co", "com", "coop", "edu",
+    topMap.put( "mw", new HashSet<String>(Arrays.asList("ac", "biz", "co", "com", "coop", "edu",
                 "gov", "int", "museum", "net", "org")));
-    topMap.put( "mx", new HashSet<>(Arrays.asList("com", "org", "gob", "edu", "net")));
-    topMap.put( "my", new HashSet<>(Arrays.asList("com", "net", "org", "gov", "edu",
+    topMap.put( "mx", new HashSet<String>(Arrays.asList("com", "org", "gob", "edu", "net")));
+    topMap.put( "my", new HashSet<String>(Arrays.asList("com", "net", "org", "gov", "edu",
                  "mil", "name", "sch")));
-    topMap.put( "na", new HashSet<>(Arrays.asList("co", "com", "org", "edu", "edunet", "net",
+    topMap.put( "na", new HashSet<String>(Arrays.asList("co", "com", "org", "edu", "edunet", "net",
                 "alt", "biz", "info")));
-    topMap.put( "nc", new HashSet<>(Arrays.asList("asso", "nom")));
-    topMap.put( "net", new HashSet<>(Arrays.asList("gb", "se", "uk", "za")));
-    topMap.put( "ng", new HashSet<>(Arrays.asList("name", "sch", "mil", "mobi", "com",
+    topMap.put( "nc", new HashSet<String>(Arrays.asList("asso", "nom")));
+    topMap.put( "net", new HashSet<String>(Arrays.asList("gb", "se", "uk", "za")));
+    topMap.put( "ng", new HashSet<String>(Arrays.asList("name", "sch", "mil", "mobi", "com",
                 "edu", "gov", "net", "org")));
-    topMap.put( "nf", new HashSet<>(Arrays.asList("com", "net", "per", "rec", "web",
+    topMap.put( "nf", new HashSet<String>(Arrays.asList("com", "net", "per", "rec", "web",
                 "arts", "firm", "info", "other", "store")));
-    topMap.put( "no", new HashSet<>(Arrays.asList("fhs", "vgs", "fylkesbibl", "folkebibl",
+    topMap.put( "no", new HashSet<String>(Arrays.asList("fhs", "vgs", "fylkesbibl", "folkebibl",
                 "museum", "idrett", "priv", "mil", "stat", "dep", "kommune", "herad", "aa",
                 "ah", "bu", "fm", "hl", "hm", "jan-mayen", "mr", "nl", "nt", "of", "ol", "oslo",
                 "rl", "sf", "st", "svalbard", "tm", "tr", "va", "vf", "akrehamn",
@@ -563,17 +560,17 @@ static {
                 "vagan", "xn--vgan-qoa", "voagat", "vagsoy", "xn--vgsy-qoa0j",
                 "vaga", "xn--vg-yiab")));
 
-    topMap.put( "nr", new HashSet<>(Arrays.asList("biz", "info", "gov", "edu", "org",
+    topMap.put( "nr", new HashSet<String>(Arrays.asList("biz", "info", "gov", "edu", "org",
                  "net", "com", "co")));
-    topMap.put( "pa", new HashSet<>(Arrays.asList("ac", "gob", "com", "org",
+    topMap.put( "pa", new HashSet<String>(Arrays.asList("ac", "gob", "com", "org",
                 "sld", "edu", "net", "ing", "abo", "med", "nom")));
-    topMap.put( "pe", new HashSet<>(Arrays.asList("edu", "gob", "nom", "mil", "org", "com",
+    topMap.put( "pe", new HashSet<String>(Arrays.asList("edu", "gob", "nom", "mil", "org", "com",
                 "net", "sld")));
-    topMap.put( "pf", new HashSet<>(Arrays.asList( "com")));
-    topMap.put( "ph", new HashSet<>(Arrays.asList("com", "net", "org", "gov", "edu", "ngo", "mil")));
-    topMap.put( "pk", new HashSet<>(Arrays.asList("com", "net", "edu", "org", "fam", "biz",
+    topMap.put( "pf", new HashSet<String>(Arrays.asList( "com")));
+    topMap.put( "ph", new HashSet<String>(Arrays.asList("com", "net", "org", "gov", "edu", "ngo", "mil")));
+    topMap.put( "pk", new HashSet<String>(Arrays.asList("com", "net", "edu", "org", "fam", "biz",
                 "web", "gov", "gob", "gok", "gon", "gop", "gos", "gog", "gkp", "info")));
-    topMap.put( "pl", new HashSet<>(Arrays.asList("aid", "agro", "atm", "auto", "biz", "com",
+    topMap.put( "pl", new HashSet<String>(Arrays.asList("aid", "agro", "atm", "auto", "biz", "com",
                 "edu", "gmina", "gsm", "info", "mail", "miasta", "media", "mil", "net", "nieruchomosci",
                 "nom", "org", "pc", "powiat", "priv", "realestate", "rel", "sex", "shop", "sklep",
                 "sos", "szkola", "targi", "tm", "tourism", "travel", "turystyka", "art",
@@ -596,21 +593,21 @@ static {
                 "zachpomor", "zagan", "zarow", "zgora", "zgorzelec", "gda", "gdansk",
                 "krakow", "poznan", "wroc", "co",
                 "lodz", "lublin", "torun")));
-    topMap.put( "pn", new HashSet<>(Arrays.asList("gov", "co", "org", "edu", "net")));
-    topMap.put( "pr", new HashSet<>(Arrays.asList("com", "net", "org", "gov", "edu", "isla",
+    topMap.put( "pn", new HashSet<String>(Arrays.asList("gov", "co", "org", "edu", "net")));
+    topMap.put( "pr", new HashSet<String>(Arrays.asList("com", "net", "org", "gov", "edu", "isla",
                 "pro", "biz", "info", "name", "est", "prof", "ac", "gobierno")));
-    topMap.put( "pro", new HashSet<>(Arrays.asList("aca", "bar", "cpa", "jur", "law",
+    topMap.put( "pro", new HashSet<String>(Arrays.asList("aca", "bar", "cpa", "jur", "law",
                  "med", "eng")));
-    topMap.put( "ps", new HashSet<>(Arrays.asList("edu", "gov", "sec", "plo", "com", "org", "net")));
-    topMap.put( "pt", new HashSet<>(Arrays.asList("net", "gov", "org", "edu", "int", "publ",
+    topMap.put( "ps", new HashSet<String>(Arrays.asList("edu", "gov", "sec", "plo", "com", "org", "net")));
+    topMap.put( "pt", new HashSet<String>(Arrays.asList("net", "gov", "org", "edu", "int", "publ",
                  "com", "nome")));
-    topMap.put( "pw", new HashSet<>(Arrays.asList("co", "ne", "or", "ed", "go", "belau")));
-    topMap.put( "qa", new HashSet<>(Arrays.asList("com", "net", "org", "gov", "edu", "mil")));
-    topMap.put( "re", new HashSet<>(Arrays.asList("com", "asso", "nom")));
-    topMap.put( "ro", new HashSet<>(Arrays.asList("com", "org", "tm", "nt", "nom", "info",
+    topMap.put( "pw", new HashSet<String>(Arrays.asList("co", "ne", "or", "ed", "go", "belau")));
+    topMap.put( "qa", new HashSet<String>(Arrays.asList("com", "net", "org", "gov", "edu", "mil")));
+    topMap.put( "re", new HashSet<String>(Arrays.asList("com", "asso", "nom")));
+    topMap.put( "ro", new HashSet<String>(Arrays.asList("com", "org", "tm", "nt", "nom", "info",
                 "rec", "arts", "firm", "store", "www")));
-    topMap.put( "rs", new HashSet<>(Arrays.asList("co", "org", "edu", "ac", "gov", "in")));
-    topMap.put( "ru", new HashSet<>(Arrays.asList("ac", "com", "edu", "int", "net", "org",
+    topMap.put( "rs", new HashSet<String>(Arrays.asList("co", "org", "edu", "ac", "gov", "in")));
+    topMap.put( "ru", new HashSet<String>(Arrays.asList("ac", "com", "edu", "int", "net", "org",
                 "pp", "adygeya", "altai", "amur", "arkhangelsk", "astrakhan", "bashkiria",
                 "belgorod", "bir", "bryansk", "buryatia", "cap", "cbg", "chel", "chelyabinsk", "chita",
                 "chukotka", "dagestan", "e-burg", "grozny", "irkutsk",
@@ -628,39 +625,39 @@ static {
                 "jamal", "kms", "k-uralsk", "kustanai", "kuzbass", "magnitka", "mytis",
                 "nakhodka", "nkz", "norilsk", "oskol", "pyatigorsk", "rubtsovsk", "snz", "syzran",
                 "vdonsk", "zgrad", "gov", "mil", "test")));
-    topMap.put( "rw", new HashSet<>(Arrays.asList("gov", "net", "edu", "ac", "com", "co",
+    topMap.put( "rw", new HashSet<String>(Arrays.asList("gov", "net", "edu", "ac", "com", "co",
                 "int", "mil", "gouv")));
-    topMap.put( "sa", new HashSet<>(Arrays.asList("com", "net", "org", "gov", "med", "pub",
+    topMap.put( "sa", new HashSet<String>(Arrays.asList("com", "net", "org", "gov", "med", "pub",
                 "edu", "sch")));
-    topMap.put( "sd", new HashSet<>(Arrays.asList("com", "net", "org", "edu", "med", "gov",
+    topMap.put( "sd", new HashSet<String>(Arrays.asList("com", "net", "org", "edu", "med", "gov",
                 "info", "tv")));
-    topMap.put( "se", new HashSet<>(Arrays.asList("a", "ac", "b", "bd", "brand", "c", "d",
+    topMap.put( "se", new HashSet<String>(Arrays.asList("a", "ac", "b", "bd", "brand", "c", "d",
                 "e", "f", "fh", "fhsk", "fhv", "g", "h", "i", "k", "komforb", "kommunalforbund",
                 "komvux", "l", "lanarb", "lanbib", "m", "n", "naturbruksgymn", "o", "org", "p", "parti",
                 "pp", "press", "r", "s", "sshn", "t", "tm", "u", "w", "x", "y", "z")));
-    topMap.put( "sg", new HashSet<>(Arrays.asList("com", "net", "org", "gov", "edu", "per")));
-    topMap.put( "sh", new HashSet<>(Arrays.asList("co", "com", "net", "org", "gov", "edu", "nom")));
-    topMap.put( "sk", new HashSet<>(Arrays.asList("gov", "edu")));
-    topMap.put( "sn", new HashSet<>(Arrays.asList("art", "com", "edu", "gouv", "org", "perso",
+    topMap.put( "sg", new HashSet<String>(Arrays.asList("com", "net", "org", "gov", "edu", "per")));
+    topMap.put( "sh", new HashSet<String>(Arrays.asList("co", "com", "net", "org", "gov", "edu", "nom")));
+    topMap.put( "sk", new HashSet<String>(Arrays.asList("gov", "edu")));
+    topMap.put( "sn", new HashSet<String>(Arrays.asList("art", "com", "edu", "gouv", "org", "perso",
                 "univ")));
-    topMap.put( "so", new HashSet<>(Arrays.asList("com", "net", "org")));
-    topMap.put( "sr", new HashSet<>(Arrays.asList("co", "com", "consulado", "edu", "embaixada",
+    topMap.put( "so", new HashSet<String>(Arrays.asList("com", "net", "org")));
+    topMap.put( "sr", new HashSet<String>(Arrays.asList("co", "com", "consulado", "edu", "embaixada",
                 "gov", "mil", "net", "org", "principe", "saotome", "store")));
-    topMap.put( "sy", new HashSet<>(Arrays.asList("edu", "gov", "net", "mil", "com", "org", "news")));
-    topMap.put( "sz", new HashSet<>(Arrays.asList("co", "ac", "org")));
-    topMap.put( "th", new HashSet<>(Arrays.asList("ac", "co", "go", "in", "mi", "net", "or")));
-    topMap.put( "tj", new HashSet<>(Arrays.asList("ac", "biz", "co", "com", "edu", "go", "gov",
+    topMap.put( "sy", new HashSet<String>(Arrays.asList("edu", "gov", "net", "mil", "com", "org", "news")));
+    topMap.put( "sz", new HashSet<String>(Arrays.asList("co", "ac", "org")));
+    topMap.put( "th", new HashSet<String>(Arrays.asList("ac", "co", "go", "in", "mi", "net", "or")));
+    topMap.put( "tj", new HashSet<String>(Arrays.asList("ac", "biz", "co", "com", "edu", "go", "gov",
                 "int", "mil", "name", "net", "nic", "org", "test", "web")));
-    topMap.put( "tn", new HashSet<>(Arrays.asList("com", "ens", "fin", "gov", "ind", "intl",
+    topMap.put( "tn", new HashSet<String>(Arrays.asList("com", "ens", "fin", "gov", "ind", "intl",
                 "nat", "net", "org", "info", "perso", "tourism", "edunet", "rnrt", "rns", "rnu",
                 "mincom", "agrinet", "defense", "turen")));
-    topMap.put( "to", new HashSet<>(Arrays.asList("gov")));
-    topMap.put( "tt", new HashSet<>(Arrays.asList("co", "com", "org", "net", "biz", "info",
+    topMap.put( "to", new HashSet<String>(Arrays.asList("gov")));
+    topMap.put( "tt", new HashSet<String>(Arrays.asList("co", "com", "org", "net", "biz", "info",
                 "pro", "int", "coop", "jobs", "mobi", "travel", "museum", "aero", "name", "gov",
                 "edu", "cat", "tel", "mil")));
-    topMap.put( "tw", new HashSet<>(Arrays.asList("edu", "gov", "mil", "com", "net", "org",
+    topMap.put( "tw", new HashSet<String>(Arrays.asList("edu", "gov", "mil", "com", "net", "org",
                 "idv", "game", "ebiz", "club", "xn--zf0ao64a", "xn--uc0atv", "xn--czrw28b")));
-    topMap.put( "ua", new HashSet<>(Arrays.asList("com", "edu", "gov", "in", "net", "org",
+    topMap.put( "ua", new HashSet<String>(Arrays.asList("com", "edu", "gov", "in", "net", "org",
                 "cherkassy", "chernigov", "chernovtsy", "ck", "cn", "crimea", "cv", "dn",
                 "dnepropetrovsk", "donetsk", "dp", "if", "ivano-frankivsk", "kh", "kharkov",
                 "kherson", "kiev", "kirovograd", "km", "kr", "ks", "lg",
@@ -668,23 +665,23 @@ static {
                 "rovno", "rv", "sebastopol", "sumy", "te", "ternopil", "uzhgorod", "vinnica", "vn",
                 "zaporizhzhe", "zp", "zhitomir", "zt", "cr", "lt", "lv", "sb", "sm", "tr",
                 "co", "biz", "in", "ne", "pp", "uz", "dominic")));
-    topMap.put( "ug", new HashSet<>(Arrays.asList("co", "ac", "sc", "go", "ne", "or", "org", "com")));
-    topMap.put( "us", new HashSet<>(Arrays.asList("dni", "fed", "isa", "kids", "nsn", "kyschools")));
-    topMap.put( "uz", new HashSet<>(Arrays.asList("co", "com", "org", "gov", "ac", "edu", "int", "pp", "net")));
-    topMap.put( "vc", new HashSet<>(Arrays.asList("com", "net", "org", "gov")));
-    topMap.put( "vi", new HashSet<>(Arrays.asList("co", "com", "k12", "net", "org")));
-    topMap.put( "vn", new HashSet<>(Arrays.asList( "com", "net", "org", "edu", "gov", "int",
+    topMap.put( "ug", new HashSet<String>(Arrays.asList("co", "ac", "sc", "go", "ne", "or", "org", "com")));
+    topMap.put( "us", new HashSet<String>(Arrays.asList("dni", "fed", "isa", "kids", "nsn", "kyschools")));
+    topMap.put( "uz", new HashSet<String>(Arrays.asList("co", "com", "org", "gov", "ac", "edu", "int", "pp", "net")));
+    topMap.put( "vc", new HashSet<String>(Arrays.asList("com", "net", "org", "gov")));
+    topMap.put( "vi", new HashSet<String>(Arrays.asList("co", "com", "k12", "net", "org")));
+    topMap.put( "vn", new HashSet<String>(Arrays.asList( "com", "net", "org", "edu", "gov", "int",
                 "ac", "biz", "info", "name", "pro", "health")));
-    topMap.put( "vu", new HashSet<>(Arrays.asList("co", "com", "net", "org", "edu", "gov", "de")));
-    topMap.put("org", new HashSet<>(Arrays.asList("ae", "za")));
-    topMap.put("pro", new HashSet<>(Arrays.asList("aca", "bar", "cpa", "jur", "law", "med", "eng")));
+    topMap.put( "vu", new HashSet<String>(Arrays.asList("co", "com", "net", "org", "edu", "gov", "de")));
+    topMap.put("org", new HashSet<String>(Arrays.asList("ae", "za")));
+    topMap.put("pro", new HashSet<String>(Arrays.asList("aca", "bar", "cpa", "jur", "law", "med", "eng")));
 
-    top3Map.put("au", new HashSet<>(Arrays.asList("act.edu.au", "eq.edu.au",
+    top3Map.put("au", new HashSet<String>(Arrays.asList("act.edu.au", "eq.edu.au",
                 "nsw.edu.au", "nt.edu.au", "qld.edu.au", "sa.edu.au", "tas.edu.au", "vic.edu.au",
                  "wa.edu.au", "act.gov.au", "nsw.gov.au", "nt.gov.au", "qld.gov.au", "sa.gov.au",
                  "tas.gov.au", "vic.gov.au", "wa.gov.au")));
-    top3Map.put("im", new HashSet<>(Arrays.asList("ltd.co.im", "plc.co.im")));
-    top3Map.put("no", new HashSet<>(Arrays.asList("gs.aa.no", "gs.ah.no", "gs.bu.no",
+    top3Map.put("im", new HashSet<String>(Arrays.asList("ltd.co.im", "plc.co.im")));
+    top3Map.put("no", new HashSet<String>(Arrays.asList("gs.aa.no", "gs.ah.no", "gs.bu.no",
                 "gs.fm.no", "gs.hl.no", "gs.hm.no", "gs.jan-mayen.no", "gs.mr.no", "gs.nl.no",
                 "gs.nt.no", "gs.of.no", "gs.ol.no", "gs.oslo.no", "gs.rl.no", "gs.sf.no",
                 "gs.st.no", "gs.svalbard.no", "gs.tm.no", "gs.tr.no", "gs.va.no", "gs.vf.no",
@@ -696,39 +693,9 @@ static {
                 "sande.more-og-romsdal.no", "sande.xn--mre-og-romsdal-qqb.no",
                 "sande.vestfold.no", "valer.ostfold.no", "xn--vler-qoa.xn--stfold-9xa.no",
                 "valer.hedmark.no", "xn--vler-qoa.hedmark.no")));
-    top3Map.put("tr", new HashSet<>(Arrays.asList("gov.nc.tr")));
+    top3Map.put("tr", new HashSet<String>(Arrays.asList("gov.nc.tr")));
 }
 
-    /**
-     * Returns a {@code sun.security.util.RegisteredDomain} representing the
-     * registered part of the specified domain.
-     *
-     * @param domain the domain name
-     * @return a {@code sun.security.util.RegisteredDomain} or null
-     *    if the domain is unknown or not registerable
-     * @throws NullPointerException if domain is null
-     */
-    public static sun.security.util.RegisteredDomain registeredDomain(final String domain) {
-        final String name = getRegisteredDomain(domain);
-        if (name.equals(domain)) {
-            return null;
-        }
-        return new sun.security.util.RegisteredDomain() {
-            private final String rname = name;
-            @Override
-            public String name() {
-                return rname;
-            }
-            @Override
-            public sun.security.util.RegisteredDomain.Type type() {
-                return sun.security.util.RegisteredDomain.Type.ICANN;
-            }
-            @Override
-            public String publicSuffix() {
-                return rname.substring(rname.indexOf(".") + 1);
-            }
-        };
-    }
 
     /*
      * Return the registered part of a qualified domain
@@ -759,12 +726,12 @@ static {
         /*
          * Break it up into seperate labels.
          */
-        final int second = cname.lastIndexOf('.', dot - 1);
+        int second = cname.lastIndexOf('.', dot - 1);
         if (second == -1)
             return cname;
         if (second == 0)
             return "";
-        final int third = cname.lastIndexOf('.', second - 1);
+        int third = cname.lastIndexOf('.', second - 1);
         int fourth = -1;
         if (third > 0) {
             fourth = cname.lastIndexOf('.', third - 1);
@@ -773,16 +740,16 @@ static {
         if (fourth > 0) {
             fifth = cname.lastIndexOf('.', fourth - 1);
         }
-        final String s = cname.substring(dot + 1);
-        final String s2 = cname.substring(second + 1, dot);
+        String s = cname.substring(dot + 1);
+        String s2 = cname.substring(second + 1, dot);
 
         /*
          * Look for longest matches first.
          * XX.PVT.K12.MA.US etc.
          */
         if (fourth != -1 && s.equals("us") && usStateSet.contains(s2)) {
-            final String s3 = cname.substring(third + 1, second);
-            final String s4 = cname.substring(fourth + 1, third);
+            String s3 = cname.substring(third + 1, second);
+            String s4 = cname.substring(fourth + 1, third);
             if (s3.equals("k12")) {
                 if (s2.equals("ma") && (s4.equals("chtr") || s4.equals("paroch"))) {
                     return cname.substring(fifth + 1);
@@ -795,16 +762,16 @@ static {
         /*
          * XX.K12.MA.US.
          */
-        final String str = cname.substring(third + 1);
+        String str = cname.substring(third + 1);
         if (third != -1) {
-            final Set<String> set = top3Map.get(s);
+            Set<String> set = top3Map.get(s);
             if (set != null) {
                 if (set.contains(str)) {
                     return cname.substring(fourth + 1);
                 }
             } else if (s.equals("us") && usStateSet.contains(s2)) {
                 // check for known third level labels
-                final String s3 = cname.substring(third + 1, second);
+                String s3 = cname.substring(third + 1, second);
                 if (usSubStateSet.contains(s3)) {
                     return fourth != -1? cname.substring(fourth + 1): cname;
                 } else {
@@ -834,7 +801,7 @@ static {
         /*
          * XX.MA.US.
          */
-        final Set<String> topSet = topMap.get(s);
+        Set<String> topSet = topMap.get(s);
         if (topSet != null) {
             if (topSet.contains(s2)) {
                 return cname.substring(third + 1);

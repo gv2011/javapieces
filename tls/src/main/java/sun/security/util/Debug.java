@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,9 +26,9 @@
 package sun.security.util;
 
 import java.math.BigInteger;
-import java.util.Locale;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.Locale;
 
 /**
  * A utility class for debuging.
@@ -42,11 +42,13 @@ public class Debug {
     private static String args;
 
     static {
-        //args = GetPropertyAction.privilegedGetProperty("java.security.debug");
-        args = "";
+        args = java.security.AccessController.doPrivileged
+                (new sun.security.action.GetPropertyAction
+                ("java.security.debug"));
 
-        //final String args2 = GetPropertyAction.privilegedGetProperty("java.security.auth.debug");
-        final String args2 = "";
+        String args2 = java.security.AccessController.doPrivileged
+                (new sun.security.action.GetPropertyAction
+                ("java.security.auth.debug"));
 
         if (args == null) {
             args = args2;
@@ -78,16 +80,13 @@ public class Debug {
         System.err.println("jar           jar verification");
         System.err.println("logincontext  login context results");
         System.err.println("jca           JCA engine class debugging");
-        System.err.println("keystore      KeyStore debugging");
         System.err.println("policy        loading and granting");
         System.err.println("provider      security provider debugging");
         System.err.println("pkcs11        PKCS11 session manager debugging");
         System.err.println("pkcs11keystore");
         System.err.println("              PKCS11 KeyStore debugging");
-        System.err.println("pkcs12        PKCS12 KeyStore debugging");
         System.err.println("sunpkcs11     SunPKCS11 provider debugging");
         System.err.println("scl           permissions SecureClassLoader assigns");
-        System.err.println("securerandom  SecureRandom");
         System.err.println("ts            timestamping");
         System.err.println();
         System.err.println("The following can be used with access:");
@@ -115,10 +114,6 @@ public class Debug {
         System.err.println("              KeyPairGenerator, KeyStore, Mac,");
         System.err.println("              MessageDigest, SecureRandom, Signature.");
         System.err.println();
-        System.err.println("The following can be used with certpath:");
-        System.err.println();
-        System.err.println("ocsp          dump the OCSP protocol exchanges");
-        System.err.println();
         System.err.println("Note: Separate multiple options with a comma");
         System.exit(0);
     }
@@ -129,7 +124,7 @@ public class Debug {
      * option is set. Set the prefix to be the same as option.
      */
 
-    public static Debug getInstance(final String option)
+    public static Debug getInstance(String option)
     {
         return getInstance(option, option);
     }
@@ -138,10 +133,10 @@ public class Debug {
      * Get a Debug object corresponding to whether or not the given
      * option is set. Set the prefix to be prefix.
      */
-    public static Debug getInstance(final String option, final String prefix)
+    public static Debug getInstance(String option, String prefix)
     {
         if (isOn(option)) {
-            final Debug d = new Debug();
+            Debug d = new Debug();
             d.prefix = prefix;
             return d;
         } else {
@@ -153,7 +148,7 @@ public class Debug {
      * True if the system property "security.debug" contains the
      * string "option".
      */
-    public static boolean isOn(final String option)
+    public static boolean isOn(String option)
     {
         if (args == null)
             return false;
@@ -170,19 +165,9 @@ public class Debug {
      * created from the call to getInstance.
      */
 
-    public void println(final String message)
+    public void println(String message)
     {
         System.err.println(prefix + ": "+message);
-    }
-
-    /**
-     * print a message to stderr that is prefixed with the prefix
-     * created from the call to getInstance and obj.
-     */
-    public void println(final Object obj, final String message)
-    {
-        System.err.println(prefix + " [" + obj.getClass().getSimpleName() +
-                "@" + System.identityHashCode(obj) + "]: "+message);
     }
 
     /**
@@ -198,7 +183,7 @@ public class Debug {
      * print a message to stderr that is prefixed with the prefix.
      */
 
-    public static void println(final String prefix, final String message)
+    public static void println(String prefix, String message)
     {
         System.err.println(prefix + ": "+message);
     }
@@ -209,15 +194,15 @@ public class Debug {
      * at least 75 characters, with embedded newlines. Words are
      * separated for readability, with eight words (32 bytes) per line.
      */
-    public static String toHexString(final BigInteger b) {
+    public static String toHexString(BigInteger b) {
         String hexValue = b.toString(16);
-        final StringBuilder sb = new StringBuilder(hexValue.length()*2);
+        StringBuffer buf = new StringBuffer(hexValue.length()*2);
 
         if (hexValue.startsWith("-")) {
-            sb.append("   -");
+            buf.append("   -");
             hexValue = hexValue.substring(1);
         } else {
-            sb.append("    ");     // four spaces
+            buf.append("    ");     // four spaces
         }
         if ((hexValue.length()%2) != 0) {
             // add back the leading 0
@@ -226,25 +211,25 @@ public class Debug {
         int i=0;
         while (i < hexValue.length()) {
             // one byte at a time
-            sb.append(hexValue.substring(i, i + 2));
+            buf.append(hexValue.substring(i, i+2));
             i+=2;
             if (i!= hexValue.length()) {
                 if ((i%64) == 0) {
-                    sb.append("\n    ");     // line after eight words
+                    buf.append("\n    ");     // line after eight words
                 } else if (i%8 == 0) {
-                    sb.append(" ");     // space between words
+                    buf.append(" ");     // space between words
                 }
             }
         }
-        return sb.toString();
+        return buf.toString();
     }
 
     /**
      * change a string into lower case except permission classes and URLs.
      */
-    private static String marshal(final String args) {
+    private static String marshal(String args) {
         if (args != null) {
-            final StringBuilder target = new StringBuilder();
+            StringBuffer target = new StringBuffer();
             StringBuffer source = new StringBuffer(args);
 
             // obtain the "permission=<classname>" options
@@ -259,7 +244,7 @@ public class Debug {
             Matcher matcher = pattern.matcher(source);
             StringBuffer left = new StringBuffer();
             while (matcher.find()) {
-                final String matched = matcher.group();
+                String matched = matcher.group();
                 target.append(matched.replaceFirst(keyReg, keyStr));
                 target.append("  ");
 
@@ -283,7 +268,7 @@ public class Debug {
             matcher = pattern.matcher(source);
             left = new StringBuffer();
             while (matcher.find()) {
-                final String matched = matcher.group();
+                String matched = matcher.group();
                 target.append(matched.replaceFirst(keyReg, keyStr));
                 target.append("  ");
 
@@ -302,15 +287,15 @@ public class Debug {
         return null;
     }
 
-    private static final char[] hexDigits = "0123456789abcdef".toCharArray();
+    private final static char[] hexDigits = "0123456789abcdef".toCharArray();
 
-    public static String toString(final byte[] b) {
+    public static String toString(byte[] b) {
         if (b == null) {
             return "(null)";
         }
-        final StringBuilder sb = new StringBuilder(b.length * 3);
+        StringBuilder sb = new StringBuilder(b.length * 3);
         for (int i = 0; i < b.length; i++) {
-            final int k = b[i] & 0xff;
+            int k = b[i] & 0xff;
             if (i != 0) {
                 sb.append(':');
             }

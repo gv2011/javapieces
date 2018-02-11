@@ -41,7 +41,7 @@ import javax.net.ssl.SSLSocketFactory;
  *
  * @author David Brownell
  */
-public final class SSLSocketFactoryImpl extends SSLSocketFactory {
+final public class SSLSocketFactoryImpl extends SSLSocketFactory {
 
     private SSLContextImpl context;
 

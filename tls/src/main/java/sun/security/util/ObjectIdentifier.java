@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2006, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,7 +50,7 @@ import java.util.Arrays;
  * @author Hemma Prafullchandra
  */
 
-public final
+final public
 class ObjectIdentifier implements Serializable
 {
     /**
@@ -93,8 +93,6 @@ class ObjectIdentifier implements Serializable
      */
     private static final long serialVersionUID = 8697030238860181294L;
 
-    private static final BigInteger TWO = BigInteger.valueOf(2);
-
     /**
      * Changed to Object
      * @serial
@@ -106,9 +104,9 @@ class ObjectIdentifier implements Serializable
     private int         componentLen = -1;            // how much is used.
 
     // Is the components field calculated?
-    private transient boolean   componentsCalculated = false;
+    transient private boolean   componentsCalculated = false;
 
-    private void readObject(final ObjectInputStream is)
+    private void readObject(ObjectInputStream is)
             throws IOException, ClassNotFoundException {
         is.defaultReadObject();
 
@@ -117,10 +115,10 @@ class ObjectIdentifier implements Serializable
         }
     }
 
-    private void writeObject(final ObjectOutputStream os)
+    private void writeObject(ObjectOutputStream os)
             throws IOException {
         if (!componentsCalculated) {
-            final int[] comps = toIntArray();
+            int[] comps = toIntArray();
             if (comps != null) {    // every one understands this
                 components = comps;
                 componentLen = comps.length;
@@ -141,16 +139,15 @@ class ObjectIdentifier implements Serializable
      * Constructs, from a string.  This string should be of the form 1.23.56.
      * Validity check included.
      */
-    public ObjectIdentifier (final String oid) throws IOException
+    public ObjectIdentifier (String oid) throws IOException
     {
-        final int ch = '.';
+        int ch = '.';
         int start = 0;
         int end = 0;
 
         int pos = 0;
-        final byte[] tmp = new byte[oid.length()];
-        int first = 0;
-        final int second;
+        byte[] tmp = new byte[oid.length()];
+        int first = 0, second;
         int count = 0;
 
         try {
@@ -202,10 +199,10 @@ class ObjectIdentifier implements Serializable
             checkCount(count);
             encoding = new byte[pos];
             System.arraycopy(tmp, 0, encoding, 0, pos);
-            stringForm = oid;
-        } catch (final IOException ioe) { // already detected by checkXXX
+            this.stringForm = oid;
+        } catch (IOException ioe) { // already detected by checkXXX
             throw ioe;
-        } catch (final Exception e) {
+        } catch (Exception e) {
             throw new IOException("ObjectIdentifier() -- Invalid format: "
                     + e.toString(), e);
         }
@@ -215,7 +212,7 @@ class ObjectIdentifier implements Serializable
      * Constructor, from an array of integers.
      * Validity check included.
      */
-    public ObjectIdentifier(final int[] values) throws IOException
+    public ObjectIdentifier (int values []) throws IOException
     {
         checkCount(values.length);
         checkFirstComponent(values[0]);
@@ -237,10 +234,10 @@ class ObjectIdentifier implements Serializable
      * @param in DER-encoded data holding an object ID
      * @exception IOException indicates a decoding error
      */
-    public ObjectIdentifier (final DerInputStream in) throws IOException
+    public ObjectIdentifier (DerInputStream in) throws IOException
     {
         byte    type_id;
-        final int     bufferEnd;
+        int     bufferEnd;
 
         /*
          * Object IDs are a "universal" type, and their tag needs only
@@ -258,7 +255,7 @@ class ObjectIdentifier implements Serializable
                 + " (tag = " +  type_id + ")"
                 );
 
-        final int len = in.getDefiniteLength();
+        int len = in.getLength();
         if (len > in.available()) {
             throw new IOException("ObjectIdentifier() -- length exceeds" +
                     "data available.  Length: " + len + ", Available: " +
@@ -274,17 +271,17 @@ class ObjectIdentifier implements Serializable
      * the tag and length have been removed/verified
      * Validity check NOT included.
      */
-    ObjectIdentifier (final DerInputBuffer buf) throws IOException
+    ObjectIdentifier (DerInputBuffer buf) throws IOException
     {
-        final DerInputStream in = new DerInputStream(buf);
+        DerInputStream in = new DerInputStream(buf);
         encoding = new byte[in.available()];
         in.getBytes(encoding);
         check(encoding);
     }
 
-    private void init(final int[] components, final int length) {
+    private void init(int[] components, int length) {
         int pos = 0;
-        final byte[] tmp = new byte[length*5+1];  // +1 for empty input
+        byte[] tmp = new byte[length*5+1];  // +1 for empty input
 
         if (components[1] < Integer.MAX_VALUE - components[0]*40)
             pos += pack7Oid(components[0]*40+components[1], tmp, pos);
@@ -310,10 +307,10 @@ class ObjectIdentifier implements Serializable
      * Old doc: Create a new ObjectIdentifier for internal use. The values are
      * neither checked nor cloned.
      */
-    public static ObjectIdentifier newInternal(final int[] values) {
+    public static ObjectIdentifier newInternal(int[] values) {
         try {
             return new ObjectIdentifier(values);
-        } catch (final IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
             // Should not happen, internal calls always uses legal values.
         }
@@ -322,9 +319,17 @@ class ObjectIdentifier implements Serializable
     /*
      * n.b. the only public interface is DerOutputStream.putOID()
      */
-    void encode (final DerOutputStream out) throws IOException
+    void encode (DerOutputStream out) throws IOException
     {
         out.write (DerValue.tag_ObjectId, encoding);
+    }
+
+    /**
+     * @deprecated Use equals((Object)oid)
+     */
+    @Deprecated
+    public boolean equals(ObjectIdentifier other) {
+        return equals((Object)other);
     }
 
     /**
@@ -333,14 +338,14 @@ class ObjectIdentifier implements Serializable
      * @return true iff the names are identical.
      */
     @Override
-    public boolean equals(final Object obj) {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
         if (obj instanceof ObjectIdentifier == false) {
             return false;
         }
-        final ObjectIdentifier other = (ObjectIdentifier)obj;
+        ObjectIdentifier other = (ObjectIdentifier)obj;
         return Arrays.equals(encoding, other.encoding);
     }
 
@@ -356,7 +361,7 @@ class ObjectIdentifier implements Serializable
      *         Integer.MAX_VALUE. Otherwise, null.
      */
     private int[] toIntArray() {
-        final int length = encoding.length;
+        int length = encoding.length;
         int[] result = new int[20];
         int which = 0;
         int fromPos = 0;
@@ -364,10 +369,10 @@ class ObjectIdentifier implements Serializable
             if ((encoding[i] & 0x80) == 0) {
                 // one section [fromPos..i]
                 if (i - fromPos + 1 > 4) {
-                    final BigInteger big = new BigInteger(pack(encoding, fromPos, i-fromPos+1, 7, 8));
+                    BigInteger big = new BigInteger(pack(encoding, fromPos, i-fromPos+1, 7, 8));
                     if (fromPos == 0) {
                         result[which++] = 2;
-                        final BigInteger second = big.subtract(BigInteger.valueOf(80));
+                        BigInteger second = big.subtract(BigInteger.valueOf(80));
                         if (second.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) == 1) {
                             return null;
                         } else {
@@ -384,7 +389,7 @@ class ObjectIdentifier implements Serializable
                     int retval = 0;
                     for (int j = fromPos; j <= i; j++) {
                         retval <<= 7;
-                        final byte tmp = encoding[j];
+                        byte tmp = encoding[j];
                         retval |= (tmp & 0x07f);
                     }
                     if (fromPos == 0) {
@@ -418,8 +423,8 @@ class ObjectIdentifier implements Serializable
     public String toString() {
         String s = stringForm;
         if (s == null) {
-            final int length = encoding.length;
-            final StringBuilder sb = new StringBuilder(length * 4);
+            int length = encoding.length;
+            StringBuffer sb = new StringBuffer(length * 4);
 
             int fromPos = 0;
             for (int i = 0; i < length; i++) {
@@ -429,7 +434,7 @@ class ObjectIdentifier implements Serializable
                         sb.append('.');
                     }
                     if (i - fromPos + 1 > 4) { // maybe big integer
-                        final BigInteger big = new BigInteger(pack(encoding, fromPos, i-fromPos+1, 7, 8));
+                        BigInteger big = new BigInteger(pack(encoding, fromPos, i-fromPos+1, 7, 8));
                         if (fromPos == 0) {
                             // first section encoded with more than 4 bytes,
                             // must be 2.something
@@ -442,7 +447,7 @@ class ObjectIdentifier implements Serializable
                         int retval = 0;
                         for (int j = fromPos; j <= i; j++) {
                             retval <<= 7;
-                            final byte tmp = encoding[j];
+                            byte tmp = encoding[j];
                             retval |= (tmp & 0x07f);
                         }
                         if (fromPos == 0) {
@@ -492,7 +497,7 @@ class ObjectIdentifier implements Serializable
      * @param ow        NUB for output
      * @return          the repacked bytes
      */
-    private static byte[] pack(final byte[] in, final int ioffset, final int ilength, final int iw, final int ow) {
+    private static byte[] pack(byte[] in, int ioffset, int ilength, int iw, int ow) {
         assert (iw > 0 && iw <= 8): "input NUB must be between 1 and 8";
         assert (ow > 0 && ow <= 8): "output NUB must be between 1 and 8";
 
@@ -500,8 +505,8 @@ class ObjectIdentifier implements Serializable
             return in.clone();
         }
 
-        final int bits = ilength * iw;    // number of all used bits
-        final byte[] out = new byte[(bits+ow-1)/ow];
+        int bits = ilength * iw;    // number of all used bits
+        byte[] out = new byte[(bits+ow-1)/ow];
 
         // starting from the 0th bit in the input
         int ipos = 0;
@@ -535,8 +540,8 @@ class ObjectIdentifier implements Serializable
      * @param ooffset the starting position to paste
      * @return the number of bytes pasted
      */
-    private static int pack7Oid(final byte[] in, final int ioffset, final int ilength, final byte[] out, final int ooffset) {
-        final byte[] pack = pack(in, ioffset, ilength, 8, 7);
+    private static int pack7Oid(byte[] in, int ioffset, int ilength, byte[] out, int ooffset) {
+        byte[] pack = pack(in, ioffset, ilength, 8, 7);
         int firstNonZero = pack.length-1;   // paste at least one byte
         for (int i=pack.length-2; i>=0; i--) {
             if (pack[i] != 0) {
@@ -555,8 +560,8 @@ class ObjectIdentifier implements Serializable
      * @param ooffset the starting position to paste
      * @return the number of bytes pasted
      */
-    private static int pack8(final byte[] in, final int ioffset, final int ilength, final byte[] out, final int ooffset) {
-        final byte[] pack = pack(in, ioffset, ilength, 7, 8);
+    private static int pack8(byte[] in, int ioffset, int ilength, byte[] out, int ooffset) {
+        byte[] pack = pack(in, ioffset, ilength, 7, 8);
         int firstNonZero = pack.length-1;   // paste at least one byte
         for (int i=pack.length-2; i>=0; i--) {
             if (pack[i] != 0) {
@@ -570,8 +575,8 @@ class ObjectIdentifier implements Serializable
     /**
      * Pack the int into a OID sub-identifier DER encoding
      */
-    private static int pack7Oid(final int input, final byte[] out, final int ooffset) {
-        final byte[] b = new byte[4];
+    private static int pack7Oid(int input, byte[] out, int ooffset) {
+        byte[] b = new byte[4];
         b[0] = (byte)(input >> 24);
         b[1] = (byte)(input >> 16);
         b[2] = (byte)(input >> 8);
@@ -582,8 +587,8 @@ class ObjectIdentifier implements Serializable
     /**
      * Pack the BigInteger into a OID subidentifier DER encoding
      */
-    private static int pack7Oid(final BigInteger input, final byte[] out, final int ooffset) {
-        final byte[] b = input.toByteArray();
+    private static int pack7Oid(BigInteger input, byte[] out, int ooffset) {
+        byte[] b = input.toByteArray();
         return pack7Oid(b, 0, b.length, out, ooffset);
     }
 
@@ -599,8 +604,8 @@ class ObjectIdentifier implements Serializable
      * Check the DER encoding. Since DER encoding defines that the integer bits
      * are unsigned, so there's no need to check the MSB.
      */
-    private static void check(final byte[] encoding) throws IOException {
-        final int length = encoding.length;
+    private static void check(byte[] encoding) throws IOException {
+        int length = encoding.length;
         if (length < 1 ||      // too short
                 (encoding[length - 1] & 0x80) != 0) {  // not ended
             throw new IOException("ObjectIdentifier() -- " +
@@ -615,31 +620,32 @@ class ObjectIdentifier implements Serializable
             }
         }
     }
-    private static void checkCount(final int count) throws IOException {
+    private static void checkCount(int count) throws IOException {
         if (count < 2) {
             throw new IOException("ObjectIdentifier() -- " +
                     "Must be at least two oid components ");
         }
     }
-    private static void checkFirstComponent(final int first) throws IOException {
+    private static void checkFirstComponent(int first) throws IOException {
         if (first < 0 || first > 2) {
             throw new IOException("ObjectIdentifier() -- " +
                     "First oid component is invalid ");
         }
     }
-    private static void checkFirstComponent(final BigInteger first) throws IOException {
-        if (first.signum() == -1 || first.compareTo(TWO) > 0) {
+    private static void checkFirstComponent(BigInteger first) throws IOException {
+        if (first.signum() == -1 ||
+                first.compareTo(BigInteger.valueOf(2)) == 1) {
             throw new IOException("ObjectIdentifier() -- " +
                     "First oid component is invalid ");
         }
     }
-    private static void checkSecondComponent(final int first, final int second) throws IOException {
+    private static void checkSecondComponent(int first, int second) throws IOException {
         if (second < 0 || first != 2 && second > 39) {
             throw new IOException("ObjectIdentifier() -- " +
                     "Second oid component is invalid ");
         }
     }
-    private static void checkSecondComponent(final int first, final BigInteger second) throws IOException {
+    private static void checkSecondComponent(int first, BigInteger second) throws IOException {
         if (second.signum() == -1 ||
                 first != 2 &&
                 second.compareTo(BigInteger.valueOf(39)) == 1) {
@@ -647,13 +653,13 @@ class ObjectIdentifier implements Serializable
                     "Second oid component is invalid ");
         }
     }
-    private static void checkOtherComponent(final int i, final int num) throws IOException {
+    private static void checkOtherComponent(int i, int num) throws IOException {
         if (num < 0) {
             throw new IOException("ObjectIdentifier() -- " +
                     "oid component #" + (i+1) + " must be non-negative ");
         }
     }
-    private static void checkOtherComponent(final int i, final BigInteger num) throws IOException {
+    private static void checkOtherComponent(int i, BigInteger num) throws IOException {
         if (num.signum() == -1) {
             throw new IOException("ObjectIdentifier() -- " +
                     "oid component #" + (i+1) + " must be non-negative ");

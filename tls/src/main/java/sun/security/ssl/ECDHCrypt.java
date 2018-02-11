@@ -60,7 +60,7 @@ final class ECDHCrypt {
         try {
             KeyPairGenerator kpg = JsseJce.getKeyPairGenerator("EC");
             ECGenParameterSpec params =
-                    EllipticCurvesExtension.getECGenParamSpec(curveId);
+                    SupportedEllipticCurvesExtension.getECGenParamSpec(curveId);
             kpg.initialize(params, random);
             KeyPair kp = kpg.generateKeyPair();
             privateKey = kp.getPrivate();

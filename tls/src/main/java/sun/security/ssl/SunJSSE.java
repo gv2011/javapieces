@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,7 +27,6 @@
 package sun.security.ssl;
 
 import java.security.*;
-import static sun.security.util.SecurityConstants.PROVIDER_VER;
 
 /**
  * The JSSE provider.
@@ -62,7 +61,7 @@ public abstract class SunJSSE extends java.security.Provider {
 
     private static String info = "Sun JSSE provider" +
         "(PKCS12, SunX509/PKIX key/trust factories, " +
-        "SSLv3/TLSv1/TLSv1.1/TLSv1.2/DTLSv1.0/DTLSv1.2)";
+        "SSLv3/TLSv1/TLSv1.1/TLSv1.2)";
 
     private static String fipsInfo =
         "Sun JSSE provider (FIPS mode, crypto provider ";
@@ -105,7 +104,7 @@ public abstract class SunJSSE extends java.security.Provider {
 
     // standard constructor
     protected SunJSSE() {
-        super("SunJSSE", PROVIDER_VER, info);
+        super("SunJSSE", 1.8d, info);
         subclassCheck();
         if (Boolean.TRUE.equals(fips)) {
             throw new ProviderException
@@ -133,7 +132,7 @@ public abstract class SunJSSE extends java.security.Provider {
 
     private SunJSSE(java.security.Provider cryptoProvider,
             String providerName) {
-        super("SunJSSE", PROVIDER_VER, fipsInfo + providerName + ")");
+        super("SunJSSE", 1.8d, fipsInfo + providerName + ")");
         subclassCheck();
         if (cryptoProvider == null) {
             // Calling Security.getProvider() will cause other providers to be
@@ -149,7 +148,7 @@ public abstract class SunJSSE extends java.security.Provider {
     }
 
     private void registerAlgorithms(final boolean isfips) {
-        AccessController.doPrivileged(new PrivilegedAction<>() {
+        AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
             public Object run() {
                 doRegister(isfips);
@@ -221,13 +220,6 @@ public abstract class SunJSSE extends java.security.Provider {
             put("Alg.Alias.SSLContext.SSLv3", "TLSv1");
         }
 
-        put("SSLContext.DTLSv1.0",
-            "sun.security.ssl.SSLContextImpl$DTLS10Context");
-        put("SSLContext.DTLSv1.2",
-            "sun.security.ssl.SSLContextImpl$DTLS12Context");
-        put("SSLContext.DTLS",
-            "sun.security.ssl.SSLContextImpl$DTLSContext");
-
         put("SSLContext.Default",
             "sun.security.ssl.SSLContextImpl$DefaultSSLContext");
 
@@ -238,8 +230,6 @@ public abstract class SunJSSE extends java.security.Provider {
             "sun.security.pkcs12.PKCS12KeyStore");
     }
 
-    // com.sun.net.ssl.internal.ssl.Provider has been deprecated since JDK 9
-    @SuppressWarnings("deprecation")
     private void subclassCheck() {
         if (getClass() != com.sun.net.ssl.internal.ssl.Provider.class) {
             throw new AssertionError("Illegal subclass: " + getClass());
@@ -247,7 +237,6 @@ public abstract class SunJSSE extends java.security.Provider {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     protected final void finalize() throws Throwable {
         // empty
         super.finalize();

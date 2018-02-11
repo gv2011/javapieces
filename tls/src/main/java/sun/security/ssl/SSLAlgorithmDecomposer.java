@@ -125,13 +125,18 @@ class SSLAlgorithmDecomposer extends AlgorithmDecomposer {
                     components.add("ECDH_ANON");
                 }
                 break;
-            default:
-                if (ClientKeyExchangeService.find(keyExchange.name) != null) {
-                    if (!onlyX509) {
-                        components.add(keyExchange.name);
-                    }
+            case K_KRB5:
+                if (!onlyX509) {
+                    components.add("KRB5");
                 }
-                // otherwise ignore
+                break;
+            case K_KRB5_EXPORT:
+                if (!onlyX509) {
+                    components.add("KRB5_EXPORT");
+                }
+                break;
+            default:
+                // ignore
             }
 
         return components;
@@ -144,41 +149,29 @@ class SSLAlgorithmDecomposer extends AlgorithmDecomposer {
             components.addAll(super.decompose(bulkCipher.transformation));
         }
 
-        switch (bulkCipher) {
-            case B_NULL:
-                components.add("C_NULL");
-                break;
-            case B_RC2_40:
-                components.add("RC2_CBC_40");
-                break;
-            case B_RC4_40:
-                components.add("RC4_40");
-                break;
-            case B_RC4_128:
-                components.add("RC4_128");
-                break;
-            case B_DES_40:
-                components.add("DES40_CBC");
-                components.add("DES_CBC_40");
-                break;
-            case B_DES:
-                components.add("DES_CBC");
-                break;
-            case B_3DES:
-                components.add("3DES_EDE_CBC");
-                break;
-            case B_AES_128:
-                components.add("AES_128_CBC");
-                break;
-            case B_AES_256:
-                components.add("AES_256_CBC");
-                break;
-            case B_AES_128_GCM:
-                components.add("AES_128_GCM");
-                break;
-            case B_AES_256_GCM:
-                components.add("AES_256_GCM");
-                break;
+        if (bulkCipher == B_NULL) {
+            components.add("C_NULL");
+        } else if (bulkCipher == B_RC2_40) {
+            components.add("RC2_CBC_40");
+        } else if (bulkCipher == B_RC4_40) {
+            components.add("RC4_40");
+        } else if (bulkCipher == B_RC4_128) {
+            components.add("RC4_128");
+        } else if (bulkCipher == B_DES_40) {
+            components.add("DES40_CBC");
+            components.add("DES_CBC_40");
+        } else if (bulkCipher == B_DES) {
+            components.add("DES_CBC");
+        } else if (bulkCipher == B_3DES) {
+            components.add("3DES_EDE_CBC");
+        } else if (bulkCipher == B_AES_128) {
+            components.add("AES_128_CBC");
+        } else if (bulkCipher == B_AES_256) {
+            components.add("AES_256_CBC");
+        } else if (bulkCipher == B_AES_128_GCM) {
+            components.add("AES_128_GCM");
+        } else if (bulkCipher == B_AES_256_GCM) {
+            components.add("AES_256_GCM");
         }
 
         return components;
@@ -188,21 +181,21 @@ class SSLAlgorithmDecomposer extends AlgorithmDecomposer {
             BulkCipher cipher) {
         Set<String> components = new HashSet<>();
 
-        if (macAlg == CipherSuite.MacAlg.M_NULL
+        if (macAlg == M_NULL
                 && cipher.cipherType != CipherType.AEAD_CIPHER) {
             components.add("M_NULL");
-        } else if (macAlg == CipherSuite.MacAlg.M_MD5) {
+        } else if (macAlg == M_MD5) {
             components.add("MD5");
             components.add("HmacMD5");
-        } else if (macAlg == CipherSuite.MacAlg.M_SHA) {
+        } else if (macAlg == M_SHA) {
             components.add("SHA1");
             components.add("SHA-1");
             components.add("HmacSHA1");
-        } else if (macAlg == CipherSuite.MacAlg.M_SHA256) {
+        } else if (macAlg == M_SHA256) {
             components.add("SHA256");
             components.add("SHA-256");
             components.add("HmacSHA256");
-        } else if (macAlg == CipherSuite.MacAlg.M_SHA384) {
+        } else if (macAlg == M_SHA384) {
             components.add("SHA384");
             components.add("SHA-384");
             components.add("HmacSHA384");

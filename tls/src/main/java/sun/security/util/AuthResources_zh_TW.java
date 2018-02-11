@@ -148,7 +148,6 @@ public class AuthResources_zh_TW extends java.util.ListResourceBundle {
      *
      * @return the contents of this <code>ResourceBundle</code>.
      */
-    @Override
     public Object[][] getContents() {
         return contents;
     }

@@ -34,18 +34,18 @@ import java.util.regex.Pattern;
  */
 public class AlgorithmDecomposer {
 
-    // '(?<!padd)in': match 'in' but not preceded with 'padd'.
-    private static final Pattern PATTERN =
-            Pattern.compile("with|and|(?<!padd)in", Pattern.CASE_INSENSITIVE);
+    private static final Pattern transPattern = Pattern.compile("/");
+    private static final Pattern pattern =
+                    Pattern.compile("with|and", Pattern.CASE_INSENSITIVE);
 
     private static Set<String> decomposeImpl(String algorithm) {
-        Set<String> elements = new HashSet<>();
 
         // algorithm/mode/padding
-        String[] transTokens = algorithm.split("/");
+        String[] transTockens = transPattern.split(algorithm);
 
-        for (String transToken : transTokens) {
-            if (transToken == null || transToken.isEmpty()) {
+        Set<String> elements = new HashSet<>();
+        for (String transTocken : transTockens) {
+            if (transTocken == null || transTocken.length() == 0) {
                 continue;
             }
 
@@ -54,11 +54,10 @@ public class AlgorithmDecomposer {
             // OAEPWith<digest>And<mgf>Padding
             // <digest>with<encryption>
             // <digest>with<encryption>and<mgf>
-            // <digest>with<encryption>in<format>
-            String[] tokens = PATTERN.split(transToken);
+            String[] tokens = pattern.split(transTocken);
 
             for (String token : tokens) {
-                if (token == null || token.isEmpty()) {
+                if (token == null || token.length() == 0) {
                     continue;
                 }
 
@@ -138,7 +137,7 @@ public class AlgorithmDecomposer {
         if (elements.contains(find)) {
             if (!elements.contains(replace)) {
                 elements.add(replace);
-            }
+}
             elements.remove(find);
         }
     }

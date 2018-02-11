@@ -26,7 +26,7 @@
 package sun.security.util;
 
 /**
- * This class represents the <code>ResourceBundle</code>
+ * <p> This class represents the <code>ResourceBundle</code>
  * for javax.security.auth and sun.security.
  *
  */
@@ -63,7 +63,7 @@ public class Resources_sv extends java.util.ListResourceBundle {
                 "ogiltigt null-AccessControlContext"},
         {"invalid.null.action.provided", "ogiltig null-funktion"},
         {"invalid.null.Class.provided", "ogiltig null-klass"},
-        {"Subject.", "Subjekt:\n"},
+        {"Subject.", "Innehavare:\n"},
         {".Principal.", "\tIdentitetshavare: "},
         {".Public.Credential.", "\tOffentlig inloggning: "},
         {".Private.Credentials.inaccessible.",
@@ -71,7 +71,7 @@ public class Resources_sv extends java.util.ListResourceBundle {
         {".Private.Credential.", "\tPrivat inloggning: "},
         {".Private.Credential.inaccessible.",
                 "\tPrivat inloggning \u00E4r inte tillg\u00E4nglig\n"},
-        {"Subject.is.read.only", "Subjektet \u00E4r skrivskyddad"},
+        {"Subject.is.read.only", "Innehavare \u00E4r skrivskyddad"},
         {"attempting.to.add.an.object.which.is.not.an.instance.of.java.security.Principal.to.a.Subject.s.Principal.Set",
                 "f\u00F6rs\u00F6k att l\u00E4gga till ett objekt som inte \u00E4r en instans av java.security.Principal till ett subjekts upps\u00E4ttning av identitetshavare"},
         {"attempting.to.add.an.object.which.is.not.an.instance.of.class",
@@ -159,6 +159,8 @@ public class Resources_sv extends java.util.ListResourceBundle {
 
     /**
      * Returns the contents of this <code>ResourceBundle</code>.
+     *
+     * <p>
      *
      * @return the contents of this <code>ResourceBundle</code>.
      */

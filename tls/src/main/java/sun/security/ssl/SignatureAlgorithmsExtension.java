@@ -118,18 +118,18 @@ final class SignatureAlgorithmsExtension extends HelloExtension {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer buffer = new StringBuffer();
         boolean opened = false;
         for (SignatureAndHashAlgorithm signAlg : algorithms) {
             if (opened) {
-                sb.append(", " + signAlg.getAlgorithmName());
+                buffer.append(", " + signAlg.getAlgorithmName());
             } else {
-                sb.append(signAlg.getAlgorithmName());
+                buffer.append(signAlg.getAlgorithmName());
                 opened = true;
             }
         }
 
-        return "Extension " + type + ", signature_algorithms: " + sb;
+        return "Extension " + type + ", signature_algorithms: " + buffer;
     }
 }
 

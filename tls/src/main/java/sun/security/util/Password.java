@@ -29,7 +29,6 @@ import java.io.*;
 import java.nio.*;
 import java.nio.charset.*;
 import java.util.Arrays;
-import jdk.internal.misc.SharedSecrets;
 
 /**
  * A utility class for reading passwords
@@ -140,7 +139,7 @@ public class Password {
     private static byte[] convertToBytes(char[] pass) {
         if (enc == null) {
             synchronized (Password.class) {
-                enc = SharedSecrets.getJavaIOAccess()
+                enc = sun.misc.SharedSecrets.getJavaIOAccess()
                         .charset()
                         .newEncoder()
                         .onMalformedInput(CodingErrorAction.REPLACE)

@@ -104,10 +104,11 @@ public final class KeyUtil {
      * <P>
      * Note that this method is only apply to DHPublicKey at present.
      *
-     * @param  key the key object, cannot be null
+     * @param  publicKey
+     *         the key object, cannot be null
      *
-     * @throws NullPointerException if {@code key} is null
-     * @throws InvalidKeyException if {@code key} is invalid
+     * @throws NullPointerException if {@code publicKey} is null
+     * @throws InvalidKeyException if {@code publicKey} is invalid
      */
     public static final void validate(Key key)
             throws InvalidKeyException {
@@ -169,8 +170,7 @@ public final class KeyUtil {
      * version numbers in a manner indistinguishable from correctly
      * formatted RSA blocks.
      *
-     * RFC 5246 describes the approach as:
-     * <pre>{@literal
+     * RFC 5246 describes the approach as :
      *
      *  1. Generate a string R of 48 random bytes
      *
@@ -188,7 +188,6 @@ public final class KeyUtil {
      *        premaster secret = M
      *
      * Note that #2 should have completed before the call to this method.
-     * }</pre>
      *
      * @param  clientVersion the version of the TLS protocol by which the
      *         client wishes to communicate during this session
@@ -196,7 +195,7 @@ public final class KeyUtil {
      *         contains the lower of that suggested by the client in the client
      *         hello and the highest supported by the server.
      * @param  encoded the encoded key in its "RAW" encoding format
-     * @param  isFailOver whether or not the previous decryption of the
+     * @param  isFailover whether or not the previous decryption of the
      *         encrypted PreMasterSecret message run into problem
      * @return the polished PreMasterSecret key in its "RAW" encoding format
      */
